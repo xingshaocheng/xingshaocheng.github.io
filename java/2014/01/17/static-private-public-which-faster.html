@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Java中static、private、public 方法哪个更快 - 专注安卓性能优化以及最佳实践的</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet"
+	href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
+
+<link rel="stylesheet" href="/assets/css/main.css" />
+<link rel="stylesheet" href="/css/syntax.css" />
+
+</head>
+<body>
+	<!-- header -->
+	<div class="container">
+		<div id="header">
+			<h1>Android-Performance</h1>
+			<h6>一个关注安卓性能优化以及最佳实践的Blog</h6>
+			<div id="nav">
+				<a href="/">主页</a>
+			</div>
+		</div>
+		
+		<div>
+			<h2>Java中static、private、public 方法哪个更快 </h2>
+<p class="meta">2014-01-17 09:24:01</p>
+
+<div class="post">
+	<p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
+
+<p>我们有下面三段代码，运算逻辑相同，我们分别用static, private, public 来声明，然后分别对他们的运行时间：</p>
+
+<div class="highlight"><pre><code class="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestStatic</span> <span class="o">{</span>
+<span class="lineno"> 2</span> 
+<span class="lineno"> 3</span>     <span class="kd">static</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">a</span><span class="o">,</span> <span class="kt">long</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 4</span>      <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">;</span>
+<span class="lineno"> 5</span>     <span class="o">}</span>
+<span class="lineno"> 6</span> 
+<span class="lineno"> 7</span>     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 8</span>      <span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="lineno"> 9</span>      <span class="k">for</span> <span class="o">(</span><span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">9999999999L</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="lineno">10</span>          <span class="n">add</span><span class="o">(</span><span class="n">i</span><span class="o">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">);</span>
+<span class="lineno">11</span>      <span class="o">}</span>
+<span class="lineno">12</span>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">);</span>
+<span class="lineno">13</span>     <span class="o">}</span>
+<span class="lineno">14</span> <span class="o">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><code class="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestPrivate</span> <span class="o">{</span>
+<span class="lineno"> 2</span> 
+<span class="lineno"> 3</span>     <span class="kd">private</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">a</span><span class="o">,</span> <span class="kt">long</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 4</span>      <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">;</span>
+<span class="lineno"> 5</span>     <span class="o">}</span>
+<span class="lineno"> 6</span> 
+<span class="lineno"> 7</span>     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 8</span>      <span class="n">TestPrivate</span> <span class="n">obj</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TestPrivate</span><span class="o">();</span>
+<span class="lineno"> 9</span>      <span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="lineno">10</span>      <span class="k">for</span> <span class="o">(</span><span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">9999999999L</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="lineno">11</span>          <span class="n">obj</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">i</span><span class="o">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">);</span>
+<span class="lineno">12</span>      <span class="o">}</span>
+<span class="lineno">13</span>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">);</span>
+<span class="lineno">14</span>     <span class="o">}</span>
+<span class="lineno">15</span> <span class="o">}</span>
+</code></pre></div>
+
+<div class="highlight"><pre><code class="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestPublic</span> <span class="o">{</span>
+<span class="lineno"> 2</span> 
+<span class="lineno"> 3</span>     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">a</span><span class="o">,</span> <span class="kt">long</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 4</span>      <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">;</span>
+<span class="lineno"> 5</span>     <span class="o">}</span>
+<span class="lineno"> 6</span> 
+<span class="lineno"> 7</span>     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 8</span>      <span class="n">TestPublic</span> <span class="n">obj</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TestPublic</span><span class="o">();</span>
+<span class="lineno"> 9</span>      <span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="lineno">10</span>      <span class="k">for</span> <span class="o">(</span><span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">9999999999L</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="lineno">11</span>          <span class="n">obj</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">i</span><span class="o">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">);</span>
+<span class="lineno">12</span>      <span class="o">}</span>
+<span class="lineno">13</span>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">);</span>
+<span class="lineno">14</span>     <span class="o">}</span>
+<span class="lineno">15</span> <span class="o">}</span>
+</code></pre></div>
+
+<p><br/>
+表1：各方法执行5次所花时间的对比结果（单位毫秒）运行环境是早我的笔记本上（Dell E6410 上）</p>
+
+<table class="table table-bordered table-striped">
+    <tbody>
+        <tr>
+            <th>#</th>
+            <th>static 方法</th>
+            <th>private 方法</th>
+            <th>public 方法</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>16804</td>
+            <td>20424</td>
+            <td>20428</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>17061</td>
+            <td>20291</td>
+            <td>20246</td>
+        </tr>   
+        <tr>
+            <td>3</td>
+            <td>17044</td>
+            <td>20629</td>
+            <td>20604</td>
+        </tr>   
+        <tr>
+            <td>4</td>
+            <td>17064</td>
+            <td>20207</td>
+            <td>21107</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>16869</td>
+            <td>20079</td>
+            <td>20405</td>
+        </tr>
+    </tbody>    
+</table>
+
+<p>从结果中可见，static 方法比 private 和 public 方法要快 15% 左右，private 和 public 消耗相差无几。</p>
+
+<p>通过 javap -v 获得的字节码我们看到，在调用这几个方发的时候，jvm 使用了不同的指令：</p>
+
+<p>static 实现中 main 方法的部分字节码：
+<pre>
+...
+         6: goto          21
+         9: lload<em>3
+        10: lload</em>3
+        11: lconst<em>1
+        12: ladd
+        13: <strong>invokestatic</strong>  #27                 // Method add:(JJ)J
+        16: pop2
+        17: lload</em>3
+        18: lconst<em>1
+        19: ladd
+        20: lstore</em>3
+        21: lload_3
+...
+</pre></p>
+
+<p>private 实现中 main 方法的部分字节码：
+<pre>
+...
+       15: goto          35
+       18: aload<em>1
+       19: lload         4
+       21: lload         4
+       23: lconst</em>1
+       24: ladd
+       25: <strong>invokespecial</strong> #28                 // Method add:(JJ)J
+       28: pop2
+       29: lload         4
+       31: lconst_1
+       32: ladd
+       33: lstore        4
+       35: lload         4
+...
+</pre></p>
+
+<p>public 实现中 main 方法的部分字节码：
+<pre>
+...
+        15: goto          35
+        18: aload<em>1
+        19: lload         4
+        21: lload         4
+        23: lconst</em>1
+        24: ladd
+        25: <strong>invokevirtual</strong> #28                 // Method add:(JJ)J
+        28: pop2
+        29: lload         4
+        31: lconst_1
+        32: ladd
+        33: lstore        4
+        35: lload         4
+...
+</pre></p>
+
+<p>在看一下几种实现方式的add方法的字节码：</p>
+
+<p>static 实现中 add 方法的字节码：
+<pre>
+  static long add(long, long);
+    flags: ACC<em>STATIC
+    Code:
+      stack=4, locals=4, args</em>size=2
+         0: lload<em>0
+         1: lload</em>2
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 6: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0     a   J
+            0       4     2     b   J
+</pre></p>
+
+<p>private 实现中 add 方法的部分字节码（需要用javap -v -p）：
+<pre>
+  private long add(long, long);
+    flags: ACC<em>PRIVATE
+    Code:
+      stack=4, locals=5, args</em>size=3
+         0: lload<em>1
+         1: lload</em>3
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 8: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0  this   LTestPrivate;
+            0       4     1     a   J
+            0       4     3     b   J
+</pre></p>
+
+<p>public 实现中 add 方法的部分字节码：
+<pre>
+  public long add(long, long);
+    flags: ACC<em>PUBLIC
+    Code:
+      stack=4, locals=5, args</em>size=3
+         0: lload<em>1
+         1: lload</em>3
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 6: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0  this   LTestPublic;
+            0       4     1     a   J
+            0       4     3     b   J
+</pre></p>
+
+<p>可以看到几个 add 方法字节码（Code部分）的实现几乎是一样的，而在调用这几个方法时jvm使用了 <code>invokestatic</code>，<code>invokespecial</code> 和 <code>invokevirtual</code> 三种不同的虚拟机指令。表1中的性能差异主要就是由这几条指令的操作方式所决定的，invokestatic 指令是基于<strong>方法</strong>（在编译时就知道该调用哪个方法）的指令，在进行栈帧切换（可以理解方法切换）时只需要把方法的参数入栈即可，从 “static 实现中 add 方法的字节码” 中我们可以看到其 LocalVariableTable（局部变量表）中只有a、b两个值。而 invokespecial 和 invokevirtual 是基于<strong>实例</strong>的指令，他们处理把a、b两个参数入栈之外，还要把对实例的引用（this指针）也同时入栈，所以在private和public实现方式的add方法字节码中，LocalVariableTable 还包括了this指针。所以这一点点额外的操作就决定了他们的性能差别。</p>
+
+<blockquote>
+<p>更多关于字节码的解释可参考之前的一篇文章 <a href="/java/2014/01/11/javap-verbose.html">《读懂 javap -verbose 》</a>    </p>
+
+<p>关于 invokestatic 、invokespecial、invokevirtual 这几个指令的详解，可参考 <a href="http://en.wikipedia.org/wiki/Java_class_file#The_constant_pool">http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html</a></p>
+</blockquote>
+
+<p>invokespecial 和 invokevirtual 在上面的例子并没有体现出明显的差别。我们再举一个例子比较一下，在这里例子中我们引入多态特性。我们把 TestPublic 改造一下，代码如下：</p>
+
+<div class="highlight"><pre><code class="java"><span class="lineno"> 1</span> <span class="kd">class</span> <span class="nc">TestBaseClass</span><span class="o">{</span>
+<span class="lineno"> 2</span>     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">a</span><span class="o">,</span> <span class="kt">long</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno"> 3</span>      <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">;</span>
+<span class="lineno"> 4</span>     <span class="o">}</span>   
+<span class="lineno"> 5</span> <span class="o">}</span>
+<span class="lineno"> 6</span> 
+<span class="lineno"> 7</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestPublic</span> <span class="kd">extends</span> <span class="n">TestBaseClass</span><span class="o">{</span>
+<span class="lineno"> 8</span>     
+<span class="lineno"> 9</span>     <span class="kd">public</span> <span class="kt">long</span> <span class="nf">add</span><span class="o">(</span><span class="kt">long</span> <span class="n">a</span><span class="o">,</span> <span class="kt">long</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno">10</span>      <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">;</span>
+<span class="lineno">11</span>     <span class="o">}</span>
+<span class="lineno">12</span> 
+<span class="lineno">13</span>     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="lineno">14</span>      <span class="n">TestBaseClass</span> <span class="n">obj</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TestPublic</span><span class="o">();</span>
+<span class="lineno">15</span>      <span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="lineno">16</span>      <span class="k">for</span> <span class="o">(</span><span class="kt">long</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">9999999999L</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="lineno">17</span>          <span class="n">obj</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">i</span><span class="o">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">);</span>
+<span class="lineno">18</span>      <span class="o">}</span>
+<span class="lineno">19</span>      <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">);</span>
+<span class="lineno">20</span>     <span class="o">}</span>
+<span class="lineno">21</span> <span class="o">}</span>
+</code></pre></div>
+
+<p>我们在执行5次，看看结果是怎样的（单位毫秒）？</p>
+
+<table class="table table-bordered table-striped">
+    <tbody>
+        <tr>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+        </tr>
+        <tr>
+            <td>79712</td>
+            <td>80419</td>
+            <td>81648</td>
+            <td>89341</td>
+            <td>83449</td>
+        </tr>
+    </tbody>    
+</table>
+
+<p>在 public 多态的情况下，同样的逻辑，花的时间是之前的4倍左右。这是由于 invokevirtual 指令属于“动态绑定”——即运行时才知道方法的所属类型是哪个，相对于动态绑定的是“静态绑定”——即编译时就知道要执行的方法属于哪个类。动态绑定不仅需要查方法表，而需要在运行时确定要引用的方法所属的类到底是哪个，这两中操作是比较耗时的。</p>
+
+<blockquote>
+<p>关于动态绑定、静态绑定的内容可参考 <a href="http://javarevisited.blogspot.com/2012/03/what-is-static-and-dynamic-binding-in.html">What is Static and Dynamic binding in Java with Example</a></p>
+
+<p>关于 invokevirtual 指令如何确定动态绑定的类型可参考<a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokevirtual">http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokevirtual</a></p>
+</blockquote>
+
+<h3>小结</h3>
+
+<p>本文锁讲述的内容并不会对你的实际项目有多大的性能提升，但是却可以指导我们养成一个“好”的编码习惯。对于独立的逻辑优先使用static 方式或者是private方式，没有必要的情况下，少用public方法，尤其在多态的模式下，public方法会有比较大的性能损耗。
+因为在 java 中 invokestatic 、invokespecial 都属于静态绑定，其他的静态绑定还有声明为 final 的方法，他们在编译时就知道方法属于那个类，所以在运行时会比较快地定位到方法在内存中对应的字节码地址（在方法区中），不像动态绑定，还需要明确方法所在的类型并搜索方法表才能定位到。</p>
+
+</div>
+
+		</div>
+		
+		<div id="footer">
+			© 2013–2014			
+		</div>
+	</div>
+	<div style="display: none;" >
+	<script type="text/javascript">
+	var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+	document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3Fe4e170c12e7c50f61b4e5b193cbd5ec8' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	</div>
+</body>
+</html>
