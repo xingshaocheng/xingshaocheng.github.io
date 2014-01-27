@@ -15,27 +15,43 @@ div,h1,h2,h3,h4,h6,p {
 	line-height: 50px;
 }
 
-#nav{
+#nav {
 	text-align: right;
 	padding-right: 10px;
 }
 
-ul{
+ul {
 	margin: 0;
 	padding: 0;
 }
-li{
+
+li {
 	list-style: none;
 }
 
-.each_list_item{
+.each_list_item {
 	border-bottom: 1px solid #E6E6E6;
 }
 
-.post{
+.post {
 	border-bottom: 1px solid #E6E6E6;
 }
-.post img{
-	
-	width: 100%;
+
+.post img {
+	max-width:100%;
+}
+
+ul.my-list-decimal li {
+	margin-left: 3em;
+	list-style: decimal;
+}
+
+ul.my-list-disc li {
+	margin-left: 3em;
+	list-style: disc;
+	padding-bottom: 1em;
+}
+
+p {
+	text-indent: 2em;
 }
