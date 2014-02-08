@@ -3,22 +3,27 @@ div,h1,h2,h3,h4,h6,p {
 }
 
 .container {
-	width: 728px;
+	width: 970px;
+	/* width: 728px; */
 }
 
 #header {
+	/*
 	border-bottom: 1px solid #E6E6E6;
+	*/
 }
 
 #footer {
 	height: 50px;
 	line-height: 50px;
 }
-
+/*
 #nav {
+	
 	text-align: right;
 	padding-right: 10px;
 }
+*/
 
 ul {
 	margin: 0;

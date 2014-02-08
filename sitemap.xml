@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    
+    <url>
+      <loc>/android/2014/01/29/android-sth-about-png-optimization.html</loc>
+        <lastmod>2014-01-29T17:32:46Z</lastmod>
+        <changefreq>monthly</changefreq>
+    </url>
+    
+    <url>
+      <loc>/android/2014/01/26/android-perf-tips.html</loc>
+        <lastmod>2014-01-26T09:24:01Z</lastmod>
+        <changefreq>monthly</changefreq>
+    </url>
+    
+    <url>
+      <loc>/java/2014/01/17/static-private-public-which-faster.html</loc>
+        <lastmod>2014-01-17T09:24:01Z</lastmod>
+        <changefreq>monthly</changefreq>
+    </url>
+    
+    <url>
+      <loc>/java/2014/01/11/javap-verbose.html</loc>
+        <lastmod>2014-01-11T18:02:01Z</lastmod>
+        <changefreq>monthly</changefreq>
+    </url>
+    
+</urlset>

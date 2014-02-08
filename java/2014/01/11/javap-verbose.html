@@ -1,34 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>读懂 javap -verbose - 专注安卓性能优化以及最佳实践的</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<link rel="stylesheet"
-	href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
-
-<link rel="stylesheet" href="/assets/css/main.css" />
-<link rel="stylesheet" href="/css/syntax.css" />
-
+	<meta charset="utf-8">
+	<title>读懂 javap -verbose - 专注安卓性能优化以及最佳实践的</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+	<link rel="shortcut icon" href="/images/favicon.ico" />
+	<!-- 
+	<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.cerulean.min.css" />
+	 -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/toc.css">
+	<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
+	
+	<link rel="stylesheet" href="/assets/css/syntax.css" />
+	<link rel="stylesheet" href="/assets/css/black.css" />
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="/assets/js/jquery.toc.js"></script>
 </head>
 <body>
+
 	<!-- header -->
 	<div class="container">
 		<div id="header">
-			<h1>Android-Performance</h1>
-			<h6>一个关注安卓性能优化以及最佳实践的Blog</h6>
-			<div id="nav">
-				<a href="/">主页</a>
+			<div class="logo ">
+				<img alt="" src="/images/logo.png">
 			</div>
+			<div class="title">
+				<h1>Android-Performance.com</h1>
+				<h2>一个关注安卓性能优化以及最佳实践的Blog</h2>
+			</div>
+			<div class="nav">
+				<ul>
+					
+					<li>
+						<a href="/" class="">主页</a></li>
+					<li>
+						<a href="/archive.html" class="">归档</a>
+					</li>
+				</ul>
+			</div>
+			 <div class="clearfix"></div>
 		</div>
 		
-		<div>
-			<h2>读懂 javap -verbose </h2>
-<p class="meta">2014-01-11 18:02:01</p>
-
-<div class="post">
-	<p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
+		<div class="clearfix">
+			<div class="raw">
+	 <div class="col-md-8 post">
+		<h2>读懂 javap -verbose </h2>
+		<div class="meta">发表于 2014-01-11 18:02:01</div>
+	 	<div id="main_content">
+		 <p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
 我们先写个简单的代码，然后我们在逐个分析 javap 解析出来的内容。</p>
 
 <div class="highlight"><pre><code class="java"><span class="lineno"> 1</span> <span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestJavap</span> <span class="o">{</span>
@@ -292,10 +313,52 @@ jvm 中每个字节码占用1个字节，上面了例子中，lload<em>0 、lloa
 <p>LineNumberTable 记录字节码行号和源代码行号的对应关系。
 比如 line 4: 0，左边的4代表源码的行号，后边的0代表字节码的起始偏移地址。这个信息是用来调试用了，我们经常看到的java抛出的异常时锁所携带的线程调用栈的信息，就是跟这个表有关系。</p>
 
+	 	</div>
+		<div class="ds-thread"></div>
+	 </div>
+	 <div class="col-md-4">
+	 	<div id="sideblock_toc" style="display: none;"></div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			最新文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			相关文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 </div>
 </div>
+<script type="text/javascript">$('#main_content').toc({
+	containerDomId : 'sideblock_toc'
+});</script>
+
 
 <!-- Duoshuo Comment BEGIN -->
-	<div class="ds-thread"></div>
+	
 <script type="text/javascript">
 var duoshuoQuery = {short_name:"androidperformance"};
 	(function() {
@@ -311,7 +374,7 @@ var duoshuoQuery = {short_name:"androidperformance"};
 		</div>
 		
 		<div id="footer">
-			© 2013–2014			
+				© 2013–2014			
 		</div>
 	</div>
 	<div style="display: none;" >

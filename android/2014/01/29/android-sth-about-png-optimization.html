@@ -1,34 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Android中关于PNG优化的那点事 - 专注安卓性能优化以及最佳实践的</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<link rel="stylesheet"
-	href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
-
-<link rel="stylesheet" href="/assets/css/main.css" />
-<link rel="stylesheet" href="/css/syntax.css" />
-
+	<meta charset="utf-8">
+	<title>Android中关于PNG优化的那点事 - 专注安卓性能优化以及最佳实践的</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+	<link rel="shortcut icon" href="/images/favicon.ico" />
+	<!-- 
+	<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.cerulean.min.css" />
+	 -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/toc.css">
+	<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
+	
+	<link rel="stylesheet" href="/assets/css/syntax.css" />
+	<link rel="stylesheet" href="/assets/css/black.css" />
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="/assets/js/jquery.toc.js"></script>
 </head>
 <body>
+
 	<!-- header -->
 	<div class="container">
 		<div id="header">
-			<h1>Android-Performance</h1>
-			<h6>一个关注安卓性能优化以及最佳实践的Blog</h6>
-			<div id="nav">
-				<a href="/">主页</a>
+			<div class="logo ">
+				<img alt="" src="/images/logo.png">
 			</div>
+			<div class="title">
+				<h1>Android-Performance.com</h1>
+				<h2>一个关注安卓性能优化以及最佳实践的Blog</h2>
+			</div>
+			<div class="nav">
+				<ul>
+					
+					<li>
+						<a href="/" class="">主页</a></li>
+					<li>
+						<a href="/archive.html" class="">归档</a>
+					</li>
+				</ul>
+			</div>
+			 <div class="clearfix"></div>
 		</div>
 		
-		<div>
-			<h2>Android中关于PNG优化的那点事 </h2>
-<p class="meta">2014-01-29 17:32:46</p>
-
-<div class="post">
-	<p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
+		<div class="clearfix">
+			<div class="raw">
+	 <div class="col-md-8 post">
+		<h2>Android中关于PNG优化的那点事 </h2>
+		<div class="meta">发表于 2014-01-29 17:32:46</div>
+	 	<div id="main_content">
+		 <p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
 
 <blockquote>
 <p><strong>Note:</strong> Image resources placed in res/drawable/ may be automatically optimized with lossless image compression by the aapt tool during the build process. For example, a true-color PNG that does not require more than 256 colors may be converted to an 8-bit PNG with a color palette. This will result in an image of equal quality but which requires less memory. So be aware that the image binaries placed in this directory can change during the build. If you plan on reading an image as a bit stream in order to convert it to a bitmap, put your images in the res/raw/ folder instead, where they will not be optimized.</p>
@@ -163,10 +184,52 @@ Output file size = 7489 bytes (4892 bytes = 39.51% decrease)
 <p>总结：
 目前来看，android有自带的png优化策略，自行优化是徒劳的。</p>
 
+	 	</div>
+		<div class="ds-thread"></div>
+	 </div>
+	 <div class="col-md-4">
+	 	<div id="sideblock_toc" style="display: none;"></div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			最新文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			相关文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 </div>
 </div>
+<script type="text/javascript">$('#main_content').toc({
+	containerDomId : 'sideblock_toc'
+});</script>
+
 
 <!-- Duoshuo Comment BEGIN -->
-	<div class="ds-thread"></div>
+	
 <script type="text/javascript">
 var duoshuoQuery = {short_name:"androidperformance"};
 	(function() {
@@ -182,7 +245,7 @@ var duoshuoQuery = {short_name:"androidperformance"};
 		</div>
 		
 		<div id="footer">
-			© 2013–2014			
+				© 2013–2014			
 		</div>
 	</div>
 	<div style="display: none;" >

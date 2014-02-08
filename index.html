@@ -1,93 +1,189 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>首页 - 专注安卓性能优化以及最佳实践的</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<link rel="stylesheet"
-	href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
-
-<link rel="stylesheet" href="/assets/css/main.css" />
-<link rel="stylesheet" href="/css/syntax.css" />
-
+	<meta charset="utf-8">
+	<title>首页 - 专注安卓性能优化以及最佳实践的</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+	<link rel="shortcut icon" href="/images/favicon.ico" />
+	<!-- 
+	<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.cerulean.min.css" />
+	 -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/toc.css">
+	<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
+	
+	<link rel="stylesheet" href="/assets/css/syntax.css" />
+	<link rel="stylesheet" href="/assets/css/black.css" />
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="/assets/js/jquery.toc.js"></script>
 </head>
 <body>
+
 	<!-- header -->
 	<div class="container">
 		<div id="header">
-			<h1>Android-Performance</h1>
-			<h6>一个关注安卓性能优化以及最佳实践的Blog</h6>
-			<div id="nav">
-				<a href="/">主页</a>
+			<div class="logo ">
+				<img alt="" src="/images/logo.png">
 			</div>
+			<div class="title">
+				<h1>Android-Performance.com</h1>
+				<h2>一个关注安卓性能优化以及最佳实践的Blog</h2>
+			</div>
+			<div class="nav">
+				<ul>
+					
+						  
+					<li>
+						<a href="/" class="active">主页</a></li>
+					<li>
+						<a href="/archive.html" class="">归档</a>
+					</li>
+				</ul>
+			</div>
+			 <div class="clearfix"></div>
 		</div>
 		
-		<div>
-			 <ul class="posts">
-   
-     <li class="each_list_item">
-     	<h2><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a> <span style="font-size: 14px;font-weight: normal;">2014-01-29</span></h2>
-     	<p><p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
+		<div class="clearfix">
+			<div class="raw">
+	 <div class="col-md-9 left_container">
+		 <div id="post_list">
+			 <ul  class="posts">
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>29</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+			     	<p><p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
 </p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/android/2014/01/28/android-manage-memory.html">App内存管理</a> <span style="font-size: 14px;font-weight: normal;">2014-01-28</span></h2>
-     	<p><p>本文内容翻译自：http://developer.android.com/training/articles/memory.html</p>
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>26</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+			     	<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
 </p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士[draft]</a> <span style="font-size: 14px;font-weight: normal;">2014-01-26</span></h2>
-     	<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>17</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+			     	<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
 </p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a> <span style="font-size: 14px;font-weight: normal;">2014-01-26</span></h2>
-     	<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
-</p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/android/2014/01/26/android-perf-reader.html">搞Android性能优化必读的一些文章和书籍</a> <span style="font-size: 14px;font-weight: normal;">2014-01-26</span></h2>
-     	<p><p>《 Effective Java》</p>
-</p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/2014/01/26/new++3.html">New  3</a> <span style="font-size: 14px;font-weight: normal;">2014-01-26</span></h2>
-     	<p>http://login.etao.com/
-
-</p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快[draft]</a> <span style="font-size: 14px;font-weight: normal;">2014-01-17</span></h2>
-     	<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
-</p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a> <span style="font-size: 14px;font-weight: normal;">2014-01-17</span></h2>
-     	<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
-</p>	
-     </li>
-   
-     <li class="each_list_item">
-     	<h2><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a> <span style="font-size: 14px;font-weight: normal;">2014-01-11</span></h2>
-     	<p><p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>11</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+			     	<p><p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
 我们先写个简单的代码，然后我们在逐个分析 javap 解析出来的内容。</p>
 </p>	
-     </li>
-   
- </ul>
+			     </li>
+			   
+			 </ul>
+		 </div>
+	 </div>
+	 <div class="col-md-3 right_container">
+	 	<div class="sideblock">
+	 		<h3>文章归档</h3>
+			<ul>
+        	
+        	
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        			<li>
+        				<a href="/archive.html#2014-01">
+        				
+						
+						        				
+						2014 年一月
+        				</a> (4)
+        			</li>
+					
+				
+        		
+			
+			</ul>
+	 	</div>
+	 </div>
+</div>
+
 
 		</div>
 		
 		<div id="footer">
-			© 2013–2014			
+				© 2013–2014			
 		</div>
 	</div>
 	<div style="display: none;" >

@@ -1,0 +1,1378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title></title>
+        <description></description>
+        <link></link>
+        <atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+        
+            <item>
+                <title>Android中关于PNG优化的那点事</title>
+                <description>&lt;p&gt;以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Image resources placed in res/drawable/ may be automatically optimized with lossless image compression by the aapt tool during the build process. For example, a true-color PNG that does not require more than 256 colors may be converted to an 8-bit PNG with a color palette. This will result in an image of equal quality but which requires less memory. So be aware that the image binaries placed in this directory can change during the build. If you plan on reading an image as a bit stream in order to convert it to a bitmap, put your images in the res/raw/ folder instead, where they will not be optimized.&lt;/p&gt;
+
+&lt;p&gt;来自 ：&lt;a href=&quot;http://developer.android.com/guide/topics/graphics/2d-graphics.html#drawables&quot;&gt;http://developer.android.com/guide/topics/graphics/2d-graphics.html#drawables&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;下面我们通过实验来证明这个结论：&lt;/p&gt;
+
+&lt;p&gt;首先要强调一下，我们这里说的优化或这压缩指的是无损的（lossless），是不在不改变图片质量的前提下来减小图片的大小。&lt;/p&gt;
+
+&lt;p&gt;先简单介绍一下我们用到的图片优化工具 &lt;a href=&quot;http://optipng.sourceforge.net/&quot;&gt;OptiPNG&lt;/a&gt;。它的原理主要就是有效减少颜色数，合并相似颜色等等，比如你用真色彩模式创建的一张单色png图片，优化后会被转成PNG8的模式，具体可以参考这篇文章 &lt;a href=&quot;http://optipng.sourceforge.net/pngtech/optipng.html&quot;&gt;A guide to PNG optimization&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;我们有两个样例图片：&lt;/p&gt;
+
+&lt;p&gt;demo_before_opt.png(395k):&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_before_opt.png&quot; src=&quot;/images/android-sth-about-png-optimization/demo_before_opt.png&quot; width=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;demo_bg_before_opt.png(12k):&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_bg_before_opt.png&quot; src=&quot;/images/android-sth-about-png-optimization/demo_bg_before_opt.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;我们通过 optipng 工具分别对两张图片进行优化：&lt;/p&gt;
+
+&lt;pre&gt;
+&gt; optipng.exe -o7 demo_before_opt.png -out demo_after_opt.png
+
+** Processing: demo_before_opt.png
+609x607 pixels, 3x8 bits/pixel, RGB
+Input IDAT size = 403529 bytes
+Input file size = 404213 bytes
+
+Trying:
+  zc = 9  zm = 9  zs = 0  f = 2         IDAT size = 375122
+  zc = 9  zm = 8  zs = 0  f = 2         IDAT size = 374910
+  zc = 9  zm = 9  zs = 1  f = 2         IDAT size = 372276
+  zc = 9  zm = 8  zs = 1  f = 2         IDAT size = 372269
+
+Selecting parameters:
+  zc = 9  zm = 8  zs = 1  f = 2         IDAT size = 372269
+
+Output file: demo_after_opt.png
+
+Output IDAT size = 372269 bytes (31260 bytes decrease)
+Output file size = 372365 bytes (31848 bytes = 7.88% decrease)
+&lt;/pre&gt;
+
+&lt;pre&gt;
+&gt; optipng.exe -o7 demo_bg_before_opt.png -out demo_bg_after_opt.png
+
+** Processing: demo_bg_before_opt.png
+100x100 pixels, 3x8 bits/pixel, RGB
+Reducing image to 8 bits/pixel, 132 colors in palette
+Input IDAT size = 12287 bytes
+Input file size = 12381 bytes
+
+Trying:
+  zc = 9  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 9  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 8  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 8  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 7  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 7  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 6  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 6  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 5  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 5  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 4  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 4  zm = 8  zs = 0  f = 0         IDAT size = 7367
+  zc = 2  zm = 9  zs = 0  f = 0         IDAT size = 7367
+  zc = 1  zm = 9  zs = 0  f = 0         IDAT size = 7361
+  zc = 9  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 9  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 8  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 8  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 7  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 7  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 6  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 6  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 5  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 5  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 4  zm = 9  zs = 1  f = 0         IDAT size = 6987
+  zc = 4  zm = 8  zs = 1  f = 0         IDAT size = 6987
+  zc = 1  zm = 9  zs = 2  f = 0         IDAT size = 6987
+  zc = 1  zm = 8  zs = 2  f = 0         IDAT size = 6987
+
+Selecting parameters:
+  zc = 1  zm = 9  zs = 2  f = 0         IDAT size = 6987
+
+Output file: demo_be_after_opt.png
+
+Output IDAT size = 6987 bytes (5300 bytes decrease)
+Output file size = 7489 bytes (4892 bytes = 39.51% decrease)
+
+&lt;/pre&gt;
+
+&lt;p&gt;命令中的 -o7 表示使用最优策略，但是时间较慢。更多 optipng 的用法参见 &lt;a href=&quot;http://optipng.sourceforge.net/optipng-0.7.4.man.pdf&quot;&gt;optipng-0.7.4.man.pdf&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;两张图片图片分别被压缩了 7.88% 和 39.51%，优化后的图片为：&lt;/p&gt;
+
+&lt;p&gt;demo_after_opt.png(363k):&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_after_opt.png&quot; src=&quot;/images/android-sth-about-png-optimization/demo_after_opt.png&quot; width=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;demo_bg_after_opt.png(7.31k):&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_bg_after_opt.png&quot; src=&quot;/images/android-sth-about-png-optimization/demo_bg_after_opt.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;而且优化后的 demo_bg_after_opt.png 被转成了PNG8的格式，我们通过 &lt;a href=&quot;http://entropymine.com/jason/tweakpng/&quot;&gt;TweakPNG&lt;/a&gt; 看下优化前后两个png的文件头便知。&lt;/p&gt;
+
+&lt;p&gt;demo_bg_before_opt.png 的头信息:&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_bg_before_opt.png 的头信息&quot; src=&quot;/images/android-sth-about-png-optimization/demo_bg_before_opt_header.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;demo_bg_after_opt.png 的头信息:&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;demo_bg_after_opt.png 的头信息&quot; src=&quot;/images/android-sth-about-png-optimization/demo_bg_after_opt_header.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;现在我们有了4个样例文件：&lt;/p&gt;
+
+&lt;p&gt;&lt;img title=&quot;所有样例文件&quot; src=&quot;/images/android-sth-about-png-optimization/build_before.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;最后我们把这4个文件放到android工程中的drawable目录下，然后打程apk包。再把apk包中的res目录解压出来看看这几个文件有什么变化，如下图：&lt;/p&gt;
+
+&lt;p&gt;&lt;img  src=&quot;/images/android-sth-about-png-optimization/result.png&quot;  /&gt;&lt;/p&gt;
+
+&lt;p&gt;demo&lt;em&gt;before&lt;/em&gt;opt.png 和 demo&lt;em&gt;bg&lt;/em&gt;before&lt;em&gt;opt.png 都比原始图片要小，说明android的打包程序已经帮你了图片优化。但是，demo&lt;/em&gt;after&lt;em&gt;opt.png 和 demo&lt;/em&gt;bg&lt;em&gt;after&lt;/em&gt;opt.png 要比前面优化过的图片要大，而且结果中demo&lt;em&gt;after&lt;/em&gt;opt.png 和 demo&lt;em&gt;before&lt;/em&gt;opt.png 的大小都一样，而且连md5值都一样， 说明自行优化png图片是不起作用的，android有自己的优化策略。&lt;/p&gt;
+
+&lt;p&gt;总结：
+目前来看，android有自带的png优化策略，自行优化是徒劳的。&lt;/p&gt;
+</description>
+                <pubDate>Wed, 29 Jan 2014 17:32:46 +0000</pubDate>
+                <link>/android/2014/01/29/android-sth-about-png-optimization.html</link>
+                <guid isPermaLink="true">/android/2014/01/29/android-sth-about-png-optimization.html</guid>
+            </item>
+        
+            <item>
+                <title>Android 性能小贴士</title>
+                <description>&lt;p&gt;本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。&lt;/p&gt;
+
+&lt;p&gt;翻译自：http://developer.android.com/training/articles/perf-tips.html&lt;/p&gt;
+
+&lt;p&gt;编写高效代码有两个基本原则：
+&lt;ul class=&quot;my-list-decimal&quot;&gt;
+    &lt;li&gt;不要写没用的逻辑，不要执行你不需要的代码。&lt;/li&gt;
+    &lt;li&gt;如果能避免使用内存，那就不要使用内存。&lt;/li&gt;
+&lt;/ul&gt;&lt;/p&gt;
+
+&lt;p&gt;我们在“微优化”一个Android App时，会面临一个最苦逼问题就是，你的应用会跑在不用的硬件平台上。不同的虚拟机运行在不同的处理器上，而且处理器的速度也不一样。所以，不能简单地说“设备X一定比设备Y慢或者快多少”，尤其在模拟器上的测试结果，并不能反映在真机设备上的真实性能。另外，用不用JIT在不同的设备上也有很大差异：运行在JIT上的代码也并不总是比没有JIT的设备运行的更好。&lt;/p&gt;
+
+&lt;p&gt;要想使你的程序能在更多平台上运行良好，就要确保你的代码在所有层面上都是高效的并且尽一切可能优化你的性能。&lt;/p&gt;
+
+&lt;h3&gt;避免创建无用对象&lt;/h3&gt;
+
+&lt;p&gt;对象从来都不是可以随便创建的。但是临时对象的内存分配比较廉价，但是分配内存总是要不分配要付出更大的代价。&lt;/p&gt;
+
+&lt;p&gt;如果你在你的应用中创建了很多对象，你就必须周期性地进行垃圾回收，这就会给你的用户带来一种“打嗝”（卡顿）的感觉。虽然在Android 2.3中引入的并行垃圾回收器会这个缓解这个问题，但是还是那句老话，能不分配还是尽量别分配。&lt;/p&gt;
+
+&lt;p&gt;因此，没必要创建对象时就要避免创建它，下面的几个列子对你会有所帮助：&lt;/p&gt;
+
+&lt;ul class=&quot;my-list-disc&quot;&gt;
+    &lt;li&gt;    如果你有一个方法返回一个字符串作为结果，而且这个结果会总是会append给一个StringBuffer，那么请改变你的实现方式，让你这个方法直接做append，而不是多创建一个短命的临时对象。
+    &lt;br/&gt;
+    &lt;br/&gt;
+    &lt;blockquote&gt;
+    译者注：我猜他可能要说是这种情况，如果没猜对，欢迎大家来拍砖啊，呵呵：
+    
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;timestr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(){&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;  &lt;span class=&quot;s&quot;&gt;&amp;quot; 20：09：11&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;StringBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StringBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;2013 &amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timestr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+    变成：
+
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;n&quot;&gt;StringBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StringBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;2013 &amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;sb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+    这样就创建了一个 time对象
+    &lt;/blockquote&gt;
+    &lt;/li&gt;
+    &lt;li&gt;    当我们从一个输入数据集中抽取一个字符串的时候，尝试返回一个原始数据的子串，而不是创建一份拷贝。这样虽然你创建了一个String类型的对象，但是他和原始数据是共享内存中的char[]。（不过这样做的前提你还要权衡一下原始数据的规模和场景，如果你这样做了，那么内存中原始数据会多了一个引用，可能不利于数据的回收，总之，这样做友好有坏，代价自己把握）。
+    &lt;br/&gt;
+    &lt;br/&gt;
+    &lt;blockquote&gt;
+    译者注：让我们做个简单实验就知道了，
+    代码：
+    &lt;img src=&quot;/images/android-perf-tips/code1.png&quot; /&gt;
+    
+    &lt;br/&gt;
+    &lt;br/&gt;
+    我们通过eclipse的variables窗口看到的内容：
+    &lt;img src=&quot;/images/android-perf-tips/substring1.png&quot; /&gt;
+    &lt;br/&gt;
+    可见 lastname 和 fullname 同享相同的内存区域，lastname只不是是通过offset控制字符串的起始位置。
+    &lt;/blockquote&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;还有一些更为极端的做法，比如把一个多维数组分解成为多个一维数组：
+&lt;ul class=&quot;my-list-disc&quot;&gt;
+    &lt;li&gt;    一个int类型（原始类型）的数组总是要好过Integer（对象类型）类型的数组。两个一维数组要比一个（int,int）类型的数据更高效。这个原则同样适用于其他原始类型。
+    &lt;blockquote&gt;
+    译者注，举个例子：
+    代码:
+    &lt;img src=&quot;/images/android-perf-tips/code2.png&quot; /&gt;
+    &lt;br/&gt;
+    我们通过eclipse的variables窗口中会看到：
+    &lt;img src=&quot;/images/android-perf-tips/veriable2.png&quot; /&gt;
+    &lt;br/&gt;
+    使用多个一维数组会比使用多位数组创建更少的对象.
+    &lt;/blockquote&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+    如果你需要创建一个二元对象的容器，比如(Foo,Bar)，那么同上文所述，创建两个类型分别为Foo 和 Bar的一维数组更为高效。（也有类外的情况，比如你在为其他代码设计API的时候，为了达到一个好的设计和可读效果，往往需要在效率上做一点点的妥协。不过在写你自己的代码的时候，还是要尽可能利用更高效的方法）。
+    &lt;/li&gt;
+&lt;/ul&gt;
+总之，能尽量少分配临时对象就少分配，更少的对象，意味着更少频率的垃圾回收，这个会直接影响你的用户体验。&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h2&gt;静态化要由于虚拟化&lt;/h2&gt;
+
+&lt;p&gt;如果类中的一个方法不需要访问类中的其他成员，那么最好把它声明为&lt;code&gt;static&lt;/code&gt;的，这样会使得该方法被调用的速度快15%-20%（译者注：这里可以参考之前的一篇文章&lt;a href=&quot;http://android-performance.com/java/2014/01/17/static-private-public-which-faster.html&quot;&gt;《Java中static、private、public 方法哪个更快》&lt;/a&gt;）。这是一个很好的做法，因为静态方法不会改变对象的状态，虚拟机会很快地搜索到该方法。&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;使用 static 、final 声明常量&lt;/h3&gt;
+
+&lt;p&gt;看下面两段代码：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, world!&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;针对这段代码，编译器会产生一个“类构造函数”，叫做&lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt;，这个构造函数会在类被第一次使用时执行（译者注：&lt;clinit&gt;是jvm中默认的静态成员的初始化方法，更多关于&lt;clinit&gt;的介绍请参见《深入Java虚拟机》一书）。该方法会把整数42压入&lt;code&gt;intVal&lt;/code&gt;的地址引用中，并将&lt;code&gt;strVal&lt;/code&gt;指向类文件字符串常量表中的一个索引地址（即字符串“Hello, world!”的索引地址）。在访问这两个值时，需要通过“字段检索”的方式进行访问（译者注：需要先检索变量名称，然后通过变量名称来检索值，后面我们会通过字节码来加深理解）。&lt;/p&gt;
+
+&lt;p&gt;我们在通过&lt;code&gt;final&lt;/code&gt;关键字再来改造一下：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, world!&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;通过&lt;code&gt;final&lt;/code&gt;关键字声明之后，该类就不需要&lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt;方法了，因为在dex文件中两个值会直接当作对应的常量来使用，用到&lt;code&gt;intVal&lt;/code&gt;时，相当于直接使用整数42，用到&lt;code&gt;strVal&lt;/code&gt;时，会使用开销相对较小的“字符串常量”指令，而不需要进行“字段检索”。&lt;/p&gt;
+
+&lt;blockquote&gt;
+译者注：
+&lt;br/&gt;
+下面我们通过具体的例子来加深一下理解：
+&lt;br/&gt;
+代码1：
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, world!&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+字节码1：
+&lt;pre&gt;
+
+...
+
+Constant pool:
+   #1 = Class              #2             //  tips/Test
+    ...
+   #5 = Utf8               intVal
+   #6 = Utf8               I
+   #7 = Utf8               strVal
+   #8 = Utf8               Ljava/lang/String;
+    ...
+  #12 = Fieldref           #1.#13         //  tips/Test.intVal:I
+  #13 = NameAndType        #5:#6          //  intVal:I
+  #14 = String             #15            //  Hello, world!
+  #15 = Utf8               Hello, world!
+  #16 = Fieldref           #1.#17         //  tips/Test.strVal:Ljava/lang/String
+  #17 = NameAndType        #7:#8          //  strVal:Ljava/lang/String;
+  
+...
+
+  static int intVal;
+    flags: ACC_STATIC
+
+  static java.lang.String strVal;
+    flags: ACC_STATIC
+
+  static {}; &lt;strong&gt;这就是 &amp;lt;clinit&amp;gt;&lt;/strong&gt;
+    flags: ACC_STATIC
+    Code:
+      stack=1, locals=0, args_size=0
+         0: bipush        42
+         2: putstatic     #12                 // Field intVal:I
+         5: ldc           #14                 // String Hello, world!
+         7: putstatic     #16                 // Field strVal:Ljava/lang/String;
+        10: return
+      LineNumberTable:
+        line 4: 0
+        line 5: 5
+        line 3: 10
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+
+        ...
+
+  public static void main(java.lang.String[]);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #27                 // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: getstatic     #12                 // Field intVal:I
+         6: invokevirtual #33                 // Method java/io/PrintStream.println:(I)V
+         9: getstatic     #27                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        12: getstatic     #16                 // Field strVal:Ljava/lang/String;
+        15: invokevirtual #39                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        18: return
+      LineNumberTable:
+        line 7: 0
+        line 8: 9
+        line 9: 18
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      19     0  args   [Ljava/lang/String;
+    ...
+&lt;/pre&gt;
+
+代码2：
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Test2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello, world!&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;intVal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strVal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+字节码2：
+
+&lt;pre&gt;
+...
+
+Constant pool:
+...
+  #11 = String             #12            //  Hello, world!
+  #12 = Utf8               Hello, world!
+
+...
+
+  static final int intVal;
+    flags: ACC_STATIC, ACC_FINAL
+    ConstantValue: int 42
+
+  static final java.lang.String strVal;
+    flags: ACC_STATIC, ACC_FINAL
+    ConstantValue: String Hello, world!
+
+...
+
+  public static void main(java.lang.String[]);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #24                 // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: bipush        42
+         5: invokevirtual #30                 // Method java/io/PrintStream.println:(I)V
+         8: getstatic     #24                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        11: ldc           #11                 // String Hello, world!
+        13: invokevirtual #36                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        16: return
+      LineNumberTable:
+        line 8: 0
+        line 9: 8
+        line 10: 16
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      17     0  args   [Ljava/lang/String;
+
+...
+
+&lt;/pre&gt;
+&lt;br/&gt;
+通过对比“字节码1”和“字节码2”我们发现，在使用`final`关键字修饰两个变量之后，“字节码2”中没有了&amp;lt;clinit&amp;gt;方法（即 “字节码1”中 &lt;i&gt;static {};&lt;/i&gt; 开始的那几行），取而代之的是多了 ConstantValue: int 42 和 ConstantValue: String Hello, world!。
+
+&lt;br/&gt;&lt;br/&gt;
+在字节码1中对 intVal 和 strVal 的应用需要反复查找常量池（Constant pool）才能找到他们的值（这个过程就是上文说的“字段检索”）。而在字节码2中，对 intVal 的引用会直接使用整数42替代（参见 bipush 42 这条指令），对 strVal 的应用也会直接定位到 “Hello, world”所在的位置（参见字节码2中 ldc #11 这条指令） 
+
+&lt;br/&gt;&lt;br/&gt; 
+可见 final 声明测商量要比不用 final 声明的常量在执行上要快。
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;注意：上述优化只适用于基础类型和String类型的常量，不适用于一般的对象引用类型。但是，使用&lt;code&gt;static final&lt;/code&gt;来声明常量仍然是一个好习惯。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;避免在类的内部使用Getters/Setters&lt;/h3&gt;
+
+&lt;p&gt;像C++这种能够编译成本地代码的语言，用getters (i = getCount())，而不是直接访问成员变量(i = mCount)是比较常用的办法。对于C++，以及其他一些常见的面向对象语言，如C#、java，这都是一个好习惯，因为编译器通常会把这种访问内联化，而且你可以很方便的地控制或debug你的成员变量。&lt;/p&gt;
+
+&lt;p&gt;但是，在Android中，这不是一个好习惯。虚拟方法的调用（译者注：就是我们通常遇到的针对实例对象方法的调用，所谓虚拟化方法是相对于静态方法的，因为在字节码指令中实例方法的调用使用的是invokevirtual，静态方法使用的是 invokestatic）是很耗性能的，远远超过调用成员变量所耗的性能。遵循大家公认的编码习惯通常也是合理的，我们在对外开放（public的）的接口中使用getters/setters，但是在同一个类的内部，你就应该直接引用成员变量了。&lt;/p&gt;
+
+&lt;p&gt;在非JIT模式下，直接引用成员变量要比调用getter方法快3倍。在JIT模式下（对成员变量的引用跟使用本地代码的性能差不多了），直接引用成员变量要比调用getter方法快7倍。&lt;/p&gt;
+
+&lt;p&gt;如果你使用ProGuard（译者注：主要用于代码混淆，也会带来一些性能上的提升），那就两全其美了，因为 ProGuard 可以把 getters/setters 内联化。&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;优先使用Enhanced For Loop语法&lt;/h3&gt;
+
+&lt;p&gt;Enhanced For Loop（有时也被称作 for each 循环），可以用在实现了　Iterable　接口的集合类型以及数组类型上。集合类型中，可以使用迭代器中的&lt;code&gt;hasNext()&lt;/code&gt;和&lt;code&gt;next()&lt;/code&gt;方法来遍历。对与ArrayList，一个显示计数器要比迭代器方式快3倍以上（有没有JIT都差不多），其他的集合类型 Enhanced For 语法和显示的迭代器方式是等价的（译者注：下面我们做个例子来体验一下这两句话的含义）。&lt;/p&gt;
+
+&lt;blockquote&gt;
+代码1：TestArrayListSpeed_Iterator
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestArrayListSpeed_Iterator&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tmp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;Iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;iterator&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;hasNext&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;())&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;tmp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;iterator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+代码2：TestArrayListSpeed_Counted
+
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestArrayListSpeed_Counted&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tmp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ArrayList&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;tmp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+在我的Dell E6410上各执行5次后的对比情况（单位ms）：
+
+&lt;table class=&quot;table table-bordered table-striped&quot;&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;th&gt;代码&lt;/th&gt;
+            &lt;th&gt;第1次&lt;/th&gt;
+            &lt;th&gt;第2次&lt;/th&gt;
+            &lt;th&gt;第3次&lt;/th&gt;
+            &lt;th&gt;第4次&lt;/th&gt;
+            &lt;th&gt;第5次&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;代码1（Iterator方式）&lt;/td&gt;
+            &lt;td&gt;699&lt;/td&gt;
+            &lt;td&gt;644&lt;/td&gt;
+            &lt;td&gt;672&lt;/td&gt;
+            &lt;td&gt;675&lt;/td&gt;
+            &lt;td&gt;707&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;代码2（Counted方式）&lt;/td&gt;
+            &lt;td&gt;162&lt;/td&gt;
+            &lt;td&gt;158&lt;/td&gt;
+            &lt;td&gt;137&lt;/td&gt;
+            &lt;td&gt;131&lt;/td&gt;
+            &lt;td&gt;141&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;    
+&lt;/table&gt;
+
+可见对于 ArrayList 类型，计数方式比迭代器方式要快得多。
+
+&lt;/blockquote&gt;
+
+&lt;p&gt;我们再通过数组类型再举个例子：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestEnhanceFor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mSplat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;COUNT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;49999999&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;];&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;TestEnhanceFor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mSplat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;zero&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mSplat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;one&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localArray&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;localArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mSplat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;two&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mArray&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;sum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mSplat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;TestEnhanceFor&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TestEnhanceFor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;zero&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// obj.one();&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// obj.two();&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;zero()&lt;/code&gt; 方法最慢，因为每次迭代都会获取数组长度，JIT对这种方式优化不了。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;one()&lt;/code&gt; 方法相对快一些，它把数组长度保存在一个局部变量中，从而避免了彼此对数组长度的检索。不过，这只是在数组长度上做了一些优化。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;two()&lt;/code&gt; 方法在没有JIT的设备上最快，在有JIT的设备上和方法&lt;code&gt;one()&lt;/code&gt; 差不多。它用的就是在 Java1.5 之后引入的Enhanced For Loop语法。&lt;/p&gt;
+
+&lt;blockquote&gt;
+译者注：我们做一下实验，看看真正的效果如何（单位毫秒）。
+&lt;br/&gt;在我的笔记本上把这三个方法分别在使用JIT和不使用JIT的方式各跑5次的结果如下（对于Hotspot虚拟机，可以使用 -Djava.compiler=NONE 来禁用JIT功能）
+
+&lt;table class=&quot;table table-bordered table-striped&quot;&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;th&gt;方法&lt;/th&gt;
+            &lt;th&gt;第1次&lt;/th&gt;
+            &lt;th&gt;第2次&lt;/th&gt;
+            &lt;th&gt;第3次&lt;/th&gt;
+            &lt;th&gt;第4次&lt;/th&gt;
+            &lt;th&gt;第5次&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;zero(JIT)&lt;/td&gt;
+            &lt;td&gt;209&lt;/td&gt;
+            &lt;td&gt;205&lt;/td&gt;
+            &lt;td&gt;212&lt;/td&gt;
+            &lt;td&gt;215&lt;/td&gt;
+            &lt;td&gt;211&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;one(JIT)&lt;/td&gt;
+            &lt;td&gt;165&lt;/td&gt;
+            &lt;td&gt;169&lt;/td&gt;
+            &lt;td&gt;180&lt;/td&gt;
+            &lt;td&gt;166&lt;/td&gt;
+            &lt;td&gt;169&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;two(JIT)&lt;/td&gt;
+            &lt;td&gt;175&lt;/td&gt;
+            &lt;td&gt;165&lt;/td&gt;
+            &lt;td&gt;177&lt;/td&gt;
+            &lt;td&gt;170&lt;/td&gt;
+            &lt;td&gt;166&lt;/td&gt;
+        &lt;/tr&gt;   
+
+        &lt;tr&gt;
+            &lt;td&gt;zero&lt;/td&gt;
+            &lt;td&gt;2583&lt;/td&gt;
+            &lt;td&gt;2451&lt;/td&gt;
+            &lt;td&gt;2152&lt;/td&gt;
+            &lt;td&gt;2146&lt;/td&gt;
+            &lt;td&gt;2166&lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;tr&gt;
+            &lt;td&gt;one&lt;/td&gt;
+            &lt;td&gt;1013&lt;/td&gt;
+            &lt;td&gt;986&lt;/td&gt;
+            &lt;td&gt;970&lt;/td&gt;
+            &lt;td&gt;1093&lt;/td&gt;
+            &lt;td&gt;987&lt;/td&gt;
+        &lt;/tr&gt;       
+
+        &lt;tr&gt;
+            &lt;td&gt;two&lt;/td&gt;
+            &lt;td&gt;1106&lt;/td&gt;
+            &lt;td&gt;1260&lt;/td&gt;
+            &lt;td&gt;1320&lt;/td&gt;
+            &lt;td&gt;1390&lt;/td&gt;
+            &lt;td&gt;1388&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;    
+&lt;/table&gt;
+
+从结果上看，在不使用JIT的情况下，Hotspot虚拟机的运行结果中 `two()` 并没有 `one()` 快，所以我对上文的说法表示质疑。不过我是在笔记上做的测试，感兴趣的同学可以在真机上做一下测试。
+
+&lt;/blockquote&gt;
+
+&lt;p&gt;所以，默认情况下优先使用 enhanced for loop 语法，只不过对于 ArrayList 类型，使用手动计数的方式获得更高的性能。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;提示：你可以参考 Josh Bloch 写的《Effective Java》一书中第46条。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;在私有内部类中考虑使用包访问方式（Package Access）方式，而不是私有访问的方式（Private Access）&lt;/p&gt;
+
+&lt;p&gt;看下面的代码：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Inner&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;stuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;doStuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Inner&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Inner&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;mValue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;doStuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;Value is &amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;这段代码的重点在于，我们定义了一个私有内部类（&lt;code&gt;Foo$Inner&lt;/code&gt;），它能直接访问外部类的私有成员变量和私有方法。这种方式是合法的，且如你所料，会输出“Value is 27”。&lt;/p&gt;
+
+&lt;p&gt;问题在于虚拟机认为从 &lt;code&gt;Foo$Inner&lt;/code&gt; 中直接访问 &lt;code&gt;Foo&lt;/code&gt; 中的私有成员是不合法的，因为他们是两个不同的类，即使在Java语法中允许内部类访问外部类的私有成员。为了在两者之间建立起联系，编译器会自动生成一些辅助方法。&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/*package*/&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;access&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;mValue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt;/*package*/&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;access&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;doStuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+译者注：这两个被编译器自动生成的方法一般的反编译工具是看不到的，但是我们可以通过 javap -v Foo 来证明它们是存在的：
+
+&lt;pre&gt;
+&gt; javap -v Foo
+...
+  static int access$0(Foo);
+    flags: ACC_STATIC, ACC_SYNTHETIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: getfield      #22                 // Field mValue:I
+         4: ireturn
+      LineNumberTable:
+        line 8: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+
+  static void access$1(Foo, int);
+    flags: ACC_STATIC, ACC_SYNTHETIC
+    Code:
+      stack=2, locals=2, args_size=2
+         0: aload_0
+         1: iload_1
+         2: invokespecial #62                 // Method doStuff:(I)V
+         5: return
+      LineNumberTable:
+        line 16: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+...
+
+
+&lt;/pre&gt;
+
+Foo$Inner 通过反编译工具（比如XJad）获得的代码是：
+
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$Inner&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;stuff&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;access&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;access&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo$Inner&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;$0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;kd&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;Foo$Inner&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo$Inner&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo$inner&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/blockquote&gt;
+
+&lt;p&gt;内部类实际上是通过这两个静态方法来访问到外部类的&lt;code&gt;mValue&lt;/code&gt;和&lt;code&gt;doStuff()&lt;/code&gt;。这意味着上面的代码是通过存取器（例如Getters/Setters）来访问成员变量的。前文中我们还提到过，通过存取器访问成员变量要比直接访问要慢，所以这个例子从某种意义上讲会造成一些“不可见”的性能影像。&lt;/p&gt;
+
+&lt;p&gt;如果你使用类似上面的代码，你可以避免私有访问（private access）带来的一些性能开销（译者注：以我的理解，这里说的“private access”可能是指在内部类中定义用于保存外部类的对象引用的变量，内部类在使用外部类时，需要先把外部类的实例set到内部类的实例中）。不过，这也意味着这些成员也可以被同一个包中的其他类访问到，在开发API时，这种方式要慎用。&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;避免使用浮点数&lt;/h3&gt;
+
+&lt;p&gt;一般来说，在Android设备中，浮点数要比整数慢2倍左右。&lt;/p&gt;
+
+&lt;p&gt;在速度方面，在现在的硬件设备上，&lt;code&gt;float&lt;/code&gt; and &lt;code&gt;double&lt;/code&gt; 并没有差别。空间敏感的&lt;code&gt;double&lt;/code&gt;在使用空间上比float大两倍。比如在台式机上，加上空间不是问题，你最好用&lt;code&gt;double&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;即使是整数，某些处理器也只是把乘法用硬件实现了，对与除法和取模操作仍然使用的是软件模拟的。&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;了解并使用系统库&lt;/h3&gt;
+
+&lt;p&gt;记住，系统中自带的库，很多都是通过汇编来实现的，即使你用最好的代码在加上JIT，也比不过汇编的方式。典型的例子就是 &lt;code&gt;String.indexOf()&lt;/code&gt;以及相关的API，Dalvik 会使用内部的实现替换之。同样，&lt;code&gt;System.arraycopy()&lt;/code&gt;方法在 Nexus One 上要比在JIT下用手工实现的方式快9倍。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;提示：可参考 Josh Bloch 所写的《Effective Java》中的第47条。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;小心使用本地方法（Native Methods）&lt;/h3&gt;
+
+&lt;p&gt;用Android NDK 开发你的App 并不总是比Java语言开发的更高效。首先，这里有从Java到Native过渡的成本，而且JIT不能跨越他们的边界进行优化。如果你分配了本地资源（比如本地堆上的内存，文件描述符、或者其他什么的），定时回收他们也会变的很困难。另外，你还要针对不通的平台来编译你的代码（而不是依赖JIT）.即使是相同的平台你也可能需要编译不同的版本，比如针对G1上的ARM处理器编译的版本不能充分利用 Nexus One 上ARM功能，针对Nexus One 上ARM编译的代码也不能跑在G1的ARM处理器上。&lt;/p&gt;
+
+&lt;p&gt;如果你已经有了一个Native代码库，并想补充到Android系统中时，此时编写本地代码是很用的，但是不要试图把能用Java代码编写部分用本地化来加速。&lt;/p&gt;
+
+&lt;p&gt;如果你不得不使用Native编码，你做好参考一下 &lt;a href=&quot;http://developer.android.com/guide/practices/jni.html&quot;&gt;JNI Tips&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;提示：可参考 Josh Bloch 所写的《Effective Java》中的第54条。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;性能的误解&lt;/h3&gt;
+
+&lt;p&gt;在没有JIT的设备上，通过精准类型来应用变量的方法要比接口更高效（比如，有个变量叫 map, 我们要调用 map 的方法，map的真实类型是 HashMap, 那么把 map 声明为 &lt;code&gt;HashMap map&lt;/code&gt; 要比声明为 &lt;code&gt;Map map&lt;/code&gt; 的调用速度快，译者注：前者在调用方法是用的是invokevirtual指令，后者使用的事invokeinterface, invokeinterface 指令要比invokevirtual慢）。但是这并不会有数倍的性能差异，实际只会慢6%左右。此外，JIT会把这个差异优化到几乎忽略不计。&lt;/p&gt;
+
+&lt;p&gt;在没有JIT的设备上，缓存成员变量值会比每次都去访问成员变量值要快20%。但是在使用JIT的情况下，成员变量的访问开销堪比本地代码，除非你认为这种方式会使你的代码可读性更好，否则，这种优化没有多大意义。&lt;/p&gt;
+</description>
+                <pubDate>Sun, 26 Jan 2014 09:24:01 +0000</pubDate>
+                <link>/android/2014/01/26/android-perf-tips.html</link>
+                <guid isPermaLink="true">/android/2014/01/26/android-perf-tips.html</guid>
+            </item>
+        
+            <item>
+                <title>Java中static、private、public 方法哪个更快</title>
+                <description>&lt;p&gt;在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。&lt;/p&gt;
+
+&lt;p&gt;我们有下面三段代码，运算逻辑相同，我们分别用static, private, public 来声明，然后分别对他们的运行时间：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt; 1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestStatic&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 2&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 3&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 4&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 5&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 6&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 7&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 8&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 9&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999999L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;10&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;11&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;12&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;13&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;14&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt; 1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestPrivate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 2&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 3&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 4&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 5&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 6&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 7&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 8&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;TestPrivate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TestPrivate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 9&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;10&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999999L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;11&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;12&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;13&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;14&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;15&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt; 1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestPublic&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 2&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 3&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 4&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 5&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 6&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 7&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 8&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;TestPublic&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TestPublic&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 9&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;10&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999999L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;11&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;12&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;13&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;14&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;15&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br/&gt;
+表1：各方法执行5次所花时间的对比结果（单位毫秒）运行环境是早我的笔记本上（Dell E6410 上）&lt;/p&gt;
+
+&lt;table class=&quot;table table-bordered table-striped&quot;&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;th&gt;#&lt;/th&gt;
+            &lt;th&gt;static 方法&lt;/th&gt;
+            &lt;th&gt;private 方法&lt;/th&gt;
+            &lt;th&gt;public 方法&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;1&lt;/td&gt;
+            &lt;td&gt;16804&lt;/td&gt;
+            &lt;td&gt;20424&lt;/td&gt;
+            &lt;td&gt;20428&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;2&lt;/td&gt;
+            &lt;td&gt;17061&lt;/td&gt;
+            &lt;td&gt;20291&lt;/td&gt;
+            &lt;td&gt;20246&lt;/td&gt;
+        &lt;/tr&gt;   
+        &lt;tr&gt;
+            &lt;td&gt;3&lt;/td&gt;
+            &lt;td&gt;17044&lt;/td&gt;
+            &lt;td&gt;20629&lt;/td&gt;
+            &lt;td&gt;20604&lt;/td&gt;
+        &lt;/tr&gt;   
+        &lt;tr&gt;
+            &lt;td&gt;4&lt;/td&gt;
+            &lt;td&gt;17064&lt;/td&gt;
+            &lt;td&gt;20207&lt;/td&gt;
+            &lt;td&gt;21107&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;5&lt;/td&gt;
+            &lt;td&gt;16869&lt;/td&gt;
+            &lt;td&gt;20079&lt;/td&gt;
+            &lt;td&gt;20405&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;    
+&lt;/table&gt;
+
+&lt;p&gt;从结果中可见，static 方法比 private 和 public 方法要快 15% 左右，private 和 public 消耗相差无几。&lt;/p&gt;
+
+&lt;p&gt;通过 javap -v 获得的字节码我们看到，在调用这几个方发的时候，jvm 使用了不同的指令：&lt;/p&gt;
+
+&lt;p&gt;static 实现中 main 方法的部分字节码：
+&lt;pre&gt;
+...
+         6: goto          21
+         9: lload&lt;em&gt;3
+        10: lload&lt;/em&gt;3
+        11: lconst&lt;em&gt;1
+        12: ladd
+        13: &lt;strong&gt;invokestatic&lt;/strong&gt;  #27                 // Method add:(JJ)J
+        16: pop2
+        17: lload&lt;/em&gt;3
+        18: lconst&lt;em&gt;1
+        19: ladd
+        20: lstore&lt;/em&gt;3
+        21: lload_3
+...
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;private 实现中 main 方法的部分字节码：
+&lt;pre&gt;
+...
+       15: goto          35
+       18: aload&lt;em&gt;1
+       19: lload         4
+       21: lload         4
+       23: lconst&lt;/em&gt;1
+       24: ladd
+       25: &lt;strong&gt;invokespecial&lt;/strong&gt; #28                 // Method add:(JJ)J
+       28: pop2
+       29: lload         4
+       31: lconst_1
+       32: ladd
+       33: lstore        4
+       35: lload         4
+...
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;public 实现中 main 方法的部分字节码：
+&lt;pre&gt;
+...
+        15: goto          35
+        18: aload&lt;em&gt;1
+        19: lload         4
+        21: lload         4
+        23: lconst&lt;/em&gt;1
+        24: ladd
+        25: &lt;strong&gt;invokevirtual&lt;/strong&gt; #28                 // Method add:(JJ)J
+        28: pop2
+        29: lload         4
+        31: lconst_1
+        32: ladd
+        33: lstore        4
+        35: lload         4
+...
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;在看一下几种实现方式的add方法的字节码：&lt;/p&gt;
+
+&lt;p&gt;static 实现中 add 方法的字节码：
+&lt;pre&gt;
+  static long add(long, long);
+    flags: ACC&lt;em&gt;STATIC
+    Code:
+      stack=4, locals=4, args&lt;/em&gt;size=2
+         0: lload&lt;em&gt;0
+         1: lload&lt;/em&gt;2
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 6: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0     a   J
+            0       4     2     b   J
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;private 实现中 add 方法的部分字节码（需要用javap -v -p）：
+&lt;pre&gt;
+  private long add(long, long);
+    flags: ACC&lt;em&gt;PRIVATE
+    Code:
+      stack=4, locals=5, args&lt;/em&gt;size=3
+         0: lload&lt;em&gt;1
+         1: lload&lt;/em&gt;3
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 8: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0  this   LTestPrivate;
+            0       4     1     a   J
+            0       4     3     b   J
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;public 实现中 add 方法的部分字节码：
+&lt;pre&gt;
+  public long add(long, long);
+    flags: ACC&lt;em&gt;PUBLIC
+    Code:
+      stack=4, locals=5, args&lt;/em&gt;size=3
+         0: lload&lt;em&gt;1
+         1: lload&lt;/em&gt;3
+         2: ladd
+         3: lreturn
+      LineNumberTable:
+        line 6: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       4     0  this   LTestPublic;
+            0       4     1     a   J
+            0       4     3     b   J
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到几个 add 方法字节码（Code部分）的实现几乎是一样的，而在调用这几个方法时jvm使用了 &lt;code&gt;invokestatic&lt;/code&gt;，&lt;code&gt;invokespecial&lt;/code&gt; 和 &lt;code&gt;invokevirtual&lt;/code&gt; 三种不同的虚拟机指令。表1中的性能差异主要就是由这几条指令的操作方式所决定的，invokestatic 指令是基于&lt;strong&gt;方法&lt;/strong&gt;（在编译时就知道该调用哪个方法）的指令，在进行栈帧切换（可以理解方法切换）时只需要把方法的参数入栈即可，从 “static 实现中 add 方法的字节码” 中我们可以看到其 LocalVariableTable（局部变量表）中只有a、b两个值。而 invokespecial 和 invokevirtual 是基于&lt;strong&gt;实例&lt;/strong&gt;的指令，他们处理把a、b两个参数入栈之外，还要把对实例的引用（this指针）也同时入栈，所以在private和public实现方式的add方法字节码中，LocalVariableTable 还包括了this指针。所以这一点点额外的操作就决定了他们的性能差别。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;更多关于字节码的解释可参考之前的一篇文章 &lt;a href=&quot;/java/2014/01/11/javap-verbose.html&quot;&gt;《读懂 javap -verbose 》&lt;/a&gt;    &lt;/p&gt;
+
+&lt;p&gt;关于 invokestatic 、invokespecial、invokevirtual 这几个指令的详解，可参考 &lt;a href=&quot;http://en.wikipedia.org/wiki/Java_class_file#The_constant_pool&quot;&gt;http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;invokespecial 和 invokevirtual 在上面的例子并没有体现出明显的差别。我们再举一个例子比较一下，在这里例子中我们引入多态特性。我们把 TestPublic 改造一下，代码如下：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt; 1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestBaseClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 2&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 3&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 4&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;   
+&lt;span class=&quot;lineno&quot;&gt; 5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 6&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 7&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestPublic&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TestBaseClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 8&lt;/span&gt;     
+&lt;span class=&quot;lineno&quot;&gt; 9&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;10&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;11&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;12&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt;13&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;14&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;TestBaseClass&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TestPublic&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;15&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;16&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9999999999L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;17&lt;/span&gt;          &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;18&lt;/span&gt;      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;19&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;currentTimeMillis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;20&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;21&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;我们在执行5次，看看结果是怎样的（单位毫秒）？&lt;/p&gt;
+
+&lt;table class=&quot;table table-bordered table-striped&quot;&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;th&gt;1&lt;/th&gt;
+            &lt;th&gt;2&lt;/th&gt;
+            &lt;th&gt;3&lt;/th&gt;
+            &lt;th&gt;4&lt;/th&gt;
+            &lt;th&gt;5&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;79712&lt;/td&gt;
+            &lt;td&gt;80419&lt;/td&gt;
+            &lt;td&gt;81648&lt;/td&gt;
+            &lt;td&gt;89341&lt;/td&gt;
+            &lt;td&gt;83449&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;    
+&lt;/table&gt;
+
+&lt;p&gt;在 public 多态的情况下，同样的逻辑，花的时间是之前的4倍左右。这是由于 invokevirtual 指令属于“动态绑定”——即运行时才知道方法的所属类型是哪个，相对于动态绑定的是“静态绑定”——即编译时就知道要执行的方法属于哪个类。动态绑定不仅需要查方法表，而需要在运行时确定要引用的方法所属的类到底是哪个，这两中操作是比较耗时的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;关于动态绑定、静态绑定的内容可参考 &lt;a href=&quot;http://javarevisited.blogspot.com/2012/03/what-is-static-and-dynamic-binding-in.html&quot;&gt;What is Static and Dynamic binding in Java with Example&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;关于 invokevirtual 指令如何确定动态绑定的类型可参考&lt;a href=&quot;http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokevirtual&quot;&gt;http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokevirtual&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3&gt;小结&lt;/h3&gt;
+
+&lt;p&gt;本文锁讲述的内容并不会对你的实际项目有多大的性能提升，但是却可以指导我们养成一个“好”的编码习惯。对于独立的逻辑优先使用static 方式或者是private方式，没有必要的情况下，少用public方法，尤其在多态的模式下，public方法会有比较大的性能损耗。
+因为在 java 中 invokestatic 、invokespecial 都属于静态绑定，其他的静态绑定还有声明为 final 的方法，他们在编译时就知道方法属于那个类，所以在运行时会比较快地定位到方法在内存中对应的字节码地址（在方法区中），不像动态绑定，还需要明确方法所在的类型并搜索方法表才能定位到。&lt;/p&gt;
+</description>
+                <pubDate>Fri, 17 Jan 2014 09:24:01 +0000</pubDate>
+                <link>/java/2014/01/17/static-private-public-which-faster.html</link>
+                <guid isPermaLink="true">/java/2014/01/17/static-private-public-which-faster.html</guid>
+            </item>
+        
+            <item>
+                <title>读懂 javap -verbose</title>
+                <description>&lt;p&gt;javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
+我们先写个简单的代码，然后我们在逐个分析 javap 解析出来的内容。&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt; 1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TestJavap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 2&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 3&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 4&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 5&lt;/span&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 6&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 7&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt; 8&lt;/span&gt;     &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt; 9&lt;/span&gt;      &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;10&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;System&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;11&lt;/span&gt;     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;12&lt;/span&gt; 
+&lt;span class=&quot;lineno&quot;&gt;13&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;执行 javap -v TestJavap 之后获得的内容如下：&lt;/p&gt;
+
+&lt;pre&gt;
+D:\workspace\test_java\bin&gt;javap -v TestJavap.class
+Classfile /D:/workspace/test_java/bin/TestJavap.class
+  Last modified 2013-12-31; size 643 bytes
+  MD5 checksum 03f49f751716ceb852c190bfb54cbb2f
+  Compiled from &quot;TestJavap.java&quot;
+public class TestJavap
+  SourceFile: &quot;TestJavap.java&quot;
+  minor version: 0
+  major version: 50
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Class              #2             //  TestJavap
+   #2 = Utf8               TestJavap
+   #3 = Class              #4             //  java/lang/Object
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               &lt;init&gt;
+   #6 = Utf8               ()V
+   #7 = Utf8               Code
+   #8 = Methodref          #3.#9          //  java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+   #9 = NameAndType        #5:#6          //  &quot;&lt;init&gt;&quot;:()V
+  #10 = Utf8               LineNumberTable
+  #11 = Utf8               LocalVariableTable
+  #12 = Utf8               this
+  #13 = Utf8               LTestJavap;
+  #14 = Utf8               add
+  #15 = Utf8               (II)I
+  #16 = Utf8               a
+  #17 = Utf8               I
+  #18 = Utf8               b
+  #19 = Utf8               r
+  #20 = Utf8               main
+  #21 = Utf8               ([Ljava/lang/String;)V
+  #22 = Methodref          #1.#23         //  TestJavap.add:(II)I
+  #23 = NameAndType        #14:#15        //  add:(II)I
+  #24 = Fieldref           #25.#27        //  java/lang/System.out:Ljava/io/PrintStream;
+  #25 = Class              #26            //  java/lang/System
+  #26 = Utf8               java/lang/System
+  #27 = NameAndType        #28:#29        //  out:Ljava/io/PrintStream;
+  #28 = Utf8               out
+  #29 = Utf8               Ljava/io/PrintStream;
+  #30 = Methodref          #31.#33        //  java/io/PrintStream.println:(I)V
+  #31 = Class              #32            //  java/io/PrintStream
+  #32 = Utf8               java/io/PrintStream
+  #33 = NameAndType        #34:#35        //  println:(I)V
+  #34 = Utf8               println
+  #35 = Utf8               (I)V
+  #36 = Utf8               args
+  #37 = Utf8               [Ljava/lang/String;
+  #38 = Utf8               SourceFile
+  #39 = Utf8               TestJavap.java
+{
+  public TestJavap();
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #8                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+         4: return
+      LineNumberTable:
+        line 1: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   LTestJavap;
+
+  public static int add(int, int);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=2
+         0: iload_0
+         1: iload_1
+         2: iadd
+         3: istore_2
+         4: iload_2
+         5: ireturn
+      LineNumberTable:
+        line 4: 0
+        line 5: 4
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       6     0     a   I
+            0       6     1     b   I
+            4       2     2     r   I
+
+  public static void main(java.lang.String[]);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=2, args_size=1
+         0: bipush        15
+         2: bipush        16
+         4: invokestatic  #22                 // Method add:(II)I
+         7: istore_1
+         8: getstatic     #24                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        11: iload_1
+        12: invokevirtual #30                 // Method java/io/PrintStream.println:(I)V
+        15: return
+      LineNumberTable:
+        line 9: 0
+        line 10: 8
+        line 11: 15
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      16     0  args   [Ljava/lang/String;
+            8       8     1     r   I
+}
+&lt;/pre&gt;
+
+&lt;p&gt;很长很恐怖，是吧。。。（如果是一个实际项目的class文件，那会恐怖得令人发指），别急，让我们来一点一点地分析：&lt;/p&gt;
+
+&lt;pre&gt;
+Classfile /D:/workspace/test_java/bin/TestJavap.class
+  Last modified 2013-12-31; size 643 bytes
+  MD5 checksum 03f49f751716ceb852c190bfb54cbb2f
+  Compiled from &quot;TestJavap.java&quot;
+public class TestJavap
+  SourceFile: &quot;TestJavap.java&quot;
+  minor version: 0
+  major version: 50
+&lt;/pre&gt;
+
+&lt;p&gt;这部分不用多说，大家一看就明白。主要就是记录一些基础的版本信息。minor version: 0 major version: 50 指的是这个class文件编译时所使用的jdk版本号。&lt;/p&gt;
+
+&lt;h3&gt;常量池:&lt;/h3&gt;
+
+&lt;pre&gt;
+Constant pool:
+   #1 = Class              #2             //  TestJavap
+   #2 = Utf8               TestJavap
+   #3 = Class              #4             //  java/lang/Object
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               &lt;init&gt;
+   #6 = Utf8               ()V
+   #7 = Utf8               Code
+   #8 = Methodref          #3.#9          //  java/lang/Object.&quot;&lt;init&gt;&quot;:()V
+   #9 = NameAndType        #5:#6          //  &quot;&lt;init&gt;&quot;:()V
+   .......
+&lt;/pre&gt;
+
+&lt;p&gt;Constant Pool （常量池），在java虚拟机中是个重要的概念。我们可以这样理解一下，这个“池子”记录了java程序运行所需要的所有符号，包括变量名、方法名、类名、字符串等一切符号。在下面的介绍中你会看到，在java方法执行时会经常引用常量池中的内容。#1，#2 这样的数字可以理解为常量池中的每一项的“索引地址”，字节码指令会经常使用这个索引来引用对应的符号。&lt;/p&gt;
+
+&lt;p&gt;这里张图可以加深对常量池的理解：&lt;/p&gt;
+
+&lt;p&gt;(图1：java 虚拟机的数据结构)
+&lt;a href=&quot;/images/java_class_file_parts.png&quot; target=&quot;_blank&quot;&gt;&lt;img src=&quot;/images/java_class_file_parts.png&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;(图2：java class 文件结构)
+&lt;a href=&quot;/images/java_vm_data_structure.png&quot; target=&quot;_blank&quot;&gt;&lt;img src=&quot;/images/java_vm_data_structure.png&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;是不是觉得jvm运行时离不开常量池&lt;/p&gt;
+
+&lt;p&gt;更多关于常量池的介绍可以参考：&lt;a href=&quot;http://en.wikipedia.org/wiki/Java_class_file#The_constant_pool&quot;&gt;http://en.wikipedia.org/wiki/Java&lt;em&gt;class&lt;/em&gt;file#The&lt;em&gt;constant&lt;/em&gt;pool&lt;/a&gt;, 以及《深入java虚机》一书&lt;/p&gt;
+
+&lt;p&gt;下面是重点，我们会详细介绍方法字节码表示的含义。
+比如方法 add 对应的java代码和字节码表示为：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;2&lt;/span&gt;   &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;3&lt;/span&gt;   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;pre&gt;
+  ......
+  public static int add(int, int);
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=2
+         0: iload_0
+         1: iload_1
+         2: iadd
+         3: istore_2
+         4: iload_2
+         5: ireturn
+      LineNumberTable:
+        line 4: 0
+        line 5: 4
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       6     0     a   I
+            0       6     1     b   I
+            4       2     2     r   I
+   ......
+&lt;/pre&gt;
+
+&lt;p&gt;其中 flags: ACC&lt;em&gt;PUBLIC, ACC&lt;/em&gt;STATIC 这一行我觉得不用细讲，一看就明白，这是类或方法的访问标识，用来定义他们的访问权限的。还有 ACC&lt;em&gt;FINAL ACC&lt;/em&gt;ABSTRACT 等。他们和 public 、static、final 、abstract 这些关键字是对应的。&lt;/p&gt;
+
+&lt;h3&gt;局部变量表:&lt;/h3&gt;
+
+&lt;p&gt;下面我们先来介绍 LocalVariableTable（局部变量表）&lt;/p&gt;
+
+&lt;p&gt;我们要先有记住一点，jvm是基于栈的运算，先看一下上面的图1（Java虚拟机运行时的数据结构）。每个java线程在运行时，jvm都会为其分配一个“栈空间”（就是一个内存区域），主要包括一个PC寄存器（记录当前线程运行的下一条指令），JVM栈空间，本地栈空间（本地代码，一般是C写的lib可以理解为JNI的方式调用的代码，和我们自己写的java代码无关了）。当某个java方法运行时，jvm会创建一个“栈帧”（也是一段内存空间），我们要介绍的LocalVariableTable就是“栈帧”的一部分，另外“栈帧”还包括我们常听说的“操作数栈（Operand Stack）”和对常量池的引用（Reference To Constant Pool）。局部变量表中记录了一个java方法运行时锁需要的局部变量名（Name 这一列）， Signature是类型描述符，I就表示int类型（更多类型描述符参见：&lt;a href=&quot;http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3&quot;&gt;http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3&lt;/a&gt;）。&lt;/p&gt;
+
+&lt;p&gt;这个还要介绍一个“Slot”的概念，一个Slot就可以理解为一个32位（4字节）的内存单位。在我们的例子中，参数a、b临时变量r都是int类型，在java中，int类型就是一个4字节长度，即1个slot。在我们的例子中，LocalVariableTable中有三个变量，都是int类型，需要3个slot，所以看到locals =3 这一行 就应该明白是什么意思了吧。&lt;/p&gt;
+
+&lt;p&gt;我们在深入一点，把a，b和r都换成Long类型，在javap -v 一下，看看会变成什么样子：
+代码：&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;java&quot;&gt;&lt;span class=&quot;lineno&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;2&lt;/span&gt;   &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;3&lt;/span&gt;   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;lineno&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;对应的字节码为：
+&lt;pre&gt;
+  .......
+  public static long add(long, long);
+    flags: ACC&lt;em&gt;PUBLIC, ACC&lt;/em&gt;STATIC
+    Code:
+      stack=4, locals=6, args&lt;em&gt;size=2
+         0: lload&lt;/em&gt;0
+         1: lload_2
+         2: ladd
+         3: lstore        4
+         5: lload         4
+         7: lreturn
+      LineNumberTable:
+        line 4: 0
+        line 5: 5
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       8     0     a   J
+            0       8     2     b   J
+            5       3     4     r   J
+   .......
+&lt;/pre&gt;&lt;/p&gt;
+
+&lt;p&gt;是不是能找到点感觉啦? 因为在java中long类型是64位，8字节，要占用2个slot，所以3个变量共占用6个slot，所以这里 locals = 6。Slot这里一列也不一样了，是吧，说明，Slot这一列可以看作变量空间的入口索引位置（Signature下的J是long类型的类型描述符）。&lt;/p&gt;
+
+&lt;h3&gt;栈宽:&lt;/h3&gt;
+
+&lt;p&gt;stack 指的是栈的宽度——就是执行这个方法时，为这个方法的操作数栈定义多少个slot，注意，这个宽度足以容纳当前方法所有运算所需要的操作数，下面我们举例说明。
+上面的例子中，只有一个 &lt;code&gt;a + b&lt;/code&gt; 的操作，每个参数都是long型（即2个slot）, 执行这个加法运算的过程是这样的，lload&lt;em&gt;0 指令把 LocalVariableTable 中索引为 0 的操作数（变量a）压入操作数栈中，lload&lt;/em&gt;2 把索引为 2 的操作数也压入栈中，注意，这里操作数栈中已经压入了两个 long 类型，共4个slot，然后 ladd 指令从栈中弹出这两个操作数（此时操作数栈空了），运算结束后在把运算结构再次压入栈中，此时操作数栈中只有一个long类型的数据（占用2个slot），然后 lstore 把栈中的结果保存在局部变量表中索引为4的位置（即变量r）。在这个过程中，“最多”占用4个slot（就是把a和b都压入栈中的时候），所以 &lt;code&gt;stack=4&lt;/code&gt;。&lt;/p&gt;
+
+&lt;h3&gt;字节码偏移位置:&lt;/h3&gt;
+
+&lt;p&gt;Code 代码前的标号是字节码指令的偏移（java的字节码文件组织得是很紧凑的，每个字节都有其具体的含义）。
+jvm 中每个字节码占用1个字节，上面了例子中，lload&lt;em&gt;0 、lload&lt;/em&gt;2、ladd 3个指令由于没有操作数，所以它们几个的偏移量分别为0，1，2。第四个指令 lstore 后面跟了一个操作数索引参数（1个字节），其占用2个字节，所以下一个质量的偏移量是从 5开始，一次类推。更多java字节码质量参见：&lt;a href=&quot;http://en.wikipedia.org/wiki/Java_bytecode_instruction_listings&quot;&gt;Java bytecode instruction listings&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3&gt;LineNumberTable:&lt;/h3&gt;
+
+&lt;p&gt;LineNumberTable 记录字节码行号和源代码行号的对应关系。
+比如 line 4: 0，左边的4代表源码的行号，后边的0代表字节码的起始偏移地址。这个信息是用来调试用了，我们经常看到的java抛出的异常时锁所携带的线程调用栈的信息，就是跟这个表有关系。&lt;/p&gt;
+</description>
+                <pubDate>Sat, 11 Jan 2014 18:02:01 +0000</pubDate>
+                <link>/java/2014/01/11/javap-verbose.html</link>
+                <guid isPermaLink="true">/java/2014/01/11/javap-verbose.html</guid>
+            </item>
+        
+    </channel>
+</rss>
