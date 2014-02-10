@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>SparseArray替代HashMap来提高性能 - 专注安卓性能优化以及最佳实践的</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	
+	<link rel="shortcut icon" href="/images/favicon.ico" />
+	<!-- 
+	<link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.cerulean.min.css" />
+	 -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/toc.css">
+	<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
+	
+	<link rel="stylesheet" href="/assets/css/syntax.css" />
+	<link rel="stylesheet" href="/assets/css/black.css" />
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="/assets/js/jquery.toc.js"></script>
+</head>
+<body>
+
+	<!-- header -->
+	<div class="container">
+		<div id="header">
+			<div class="logo ">
+				<img alt="" src="/images/logo.png">
+			</div>
+			<div class="title">
+				<h1>Android-Performance.com</h1>
+				<h2>一个关注安卓性能优化以及最佳实践的Blog</h2>
+			</div>
+			<div class="nav">
+				<ul>
+					
+					<li>
+						<a href="/" class="">主页</a></li>
+					<li>
+						<a href="/archive.html" class="">归档</a>
+					</li>
+				</ul>
+			</div>
+			 <div class="clearfix"></div>
+		</div>
+		
+		<div class="clearfix">
+			<div class="raw">
+	 <div class="col-md-8 post">
+		<h2>SparseArray替代HashMap来提高性能 </h2>
+		<div class="meta">发表于 2014-02-10 23:09:11</div>
+	 	<div id="main_content">
+		 <p><a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>是Android框架独有的类，在标准的JDK中不存在这个类。它要比 HashMap 节省内存，某些情况下比HashMap性能更好，按照官方问答的解释，主要是因为SparseArray不需要对key和value进行auto-boxing（将原始类型封装为对象类型，比如把int类型封装成Integer类型），结构比HashMap简单（SparseArray内部主要使用两个一维数组来保存数据，一个用来存key，一个用来存value）不需要额外的额外的数据结构（主要是针对HashMap中的HashMapEntry而言的）。是骡子是马得拉出来遛遛，下面我们就通过几段程序来证明SparseArray在各方面表现如何，下面的试验结果时在我的Hike X1（Android 4.2.2）手机上运行得出的。</p>
+
+<p>代码1：</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">int</span> <span class="n">MAX</span> <span class="o">=</span> <span class="mi">100000</span><span class="o">;</span>
+<span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">hash</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码2：</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">int</span> <span class="n">MAX</span> <span class="o">=</span> <span class="mi">100000</span><span class="o">;</span>
+<span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">sparse</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">;</span>
+</code></pre></div>
+
+<p>我们分别在<code>long start</code>处和<code>long ts</code>处设置断点，然后通过DDMS工具查看内存使用情况。</p>
+
+<p>代码1中，我们使用HashMap来创建100000条数据，开始创建前的系统内存情况为：
+<img src="/images/android-sparsearray-vs-hashmap/heap1_1.png" alt=""></p>
+
+<p>创建HashMap之后，应用内存情况为：
+<img src="/images/android-sparsearray-vs-hashmap/heap1_2.png" alt="">
+可见创建HashMap用去约 13.2M内存。</p>
+
+<p>再看 代码2，同样是创建100000条数据，我们用SparseArray来试试，开始创建前的内存使用情况为：
+<img src="/images/android-sparsearray-vs-hashmap/heap2_1.png" alt=""></p>
+
+<p>创建SparseArray之后的情况：
+<img src="/images/android-sparsearray-vs-hashmap/heap2_2.png" alt="">
+创建SparseArray共用去 8.626M内存。</p>
+
+<p><strong>可见使用 SparseArray 的确比 HashMap 节省内存，大概节省 35%左右的内存。</strong></p>
+
+<hr>
+
+<p>我们再比较一下插入数据的效率如何，我们在加两段代码（主要就是把插入顺序变换一下，从大到小插入）：</p>
+
+<p>代码3：</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">int</span> <span class="n">MAX</span> <span class="o">=</span> <span class="mi">100000</span><span class="o">;</span>
+<span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">hash</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">MAX</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码4：</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">int</span> <span class="n">MAX</span> <span class="o">=</span> <span class="mi">100000</span><span class="o">;</span>
+<span class="kt">long</span> <span class="n">start</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">sparse</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">MAX</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span><span class="mi">1</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start</span><span class="o">;</span>
+</code></pre></div>
+
+<p>我们分别把这4代码分别运行5次，对比一下ts的时间（单位毫秒）：</p>
+
+<table><thead>
+<tr>
+<th>#</th>
+<th>代码1</th>
+<th>代码2</th>
+<th>代码3</th>
+<th>代码4</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td>10750ms</td>
+<td>7429ms</td>
+<td>10862ms</td>
+<td>90527ms</td>
+</tr>
+<tr>
+<td>2</td>
+<td>10718ms</td>
+<td>7386ms</td>
+<td>10711ms</td>
+<td>87990ms</td>
+</tr>
+<tr>
+<td>3</td>
+<td>10816ms</td>
+<td>7462ms</td>
+<td>11033ms</td>
+<td>88259ms</td>
+</tr>
+<tr>
+<td>4</td>
+<td>10943ms</td>
+<td>7386ms</td>
+<td>10854ms</td>
+<td>88474ms</td>
+</tr>
+<tr>
+<td>5</td>
+<td>10671ms</td>
+<td>7317ms</td>
+<td>10786ms</td>
+<td>90630ms</td>
+</tr>
+</tbody></table>
+
+<p>通过结果我们看出，在正序插入数据时候，SparseArray比HashMap要快一些；HashMap不管是倒序还是正序开销几乎是一样的；但是SparseArray的倒序插入要比正序插入要慢10倍以上，这时为什么呢？我们再看下面一段代码：</p>
+
+<p>代码5：</p>
+
+<div class="highlight"><pre><code class="java"><span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">sparse</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="mi">3</span><span class="o">);</span>
+
+<span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;s1&quot;</span><span class="o">);</span>
+<span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="s">&quot;s3&quot;</span><span class="o">);</span>
+<span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="s">&quot;s2&quot;</span><span class="o">);</span>
+</code></pre></div>
+
+<p>我们在Eclipse的debug模式中，看Variables窗口,如图：
+<img src="/images/android-sparsearray-vs-hashmap/debug_variables.png" alt=""></p>
+
+<p>及时我们是按照1,3,2的顺序排列的，但是在SparseArray内部还是按照正序排列的，这时因为SparseArray在检索数据的时候使用的是二分查找，所以每次插入新数据的时候SparseArray都需要重新排序，所以代码4中，逆序是最差情况。</p>
+
+<hr>
+
+<p>下面我们在简单看下检索情况：</p>
+
+<p>代码5：</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">long</span> <span class="n">start4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">33333</span><span class="o">);</span> <span class="c1">//针对固定值检索</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码6:</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">long</span> <span class="n">start4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span> <span class="c1">//顺序检索</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码7:</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">long</span> <span class="n">start4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">33333</span><span class="o">);</span> <span class="c1">//针对固定值检索</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码8:</p>
+
+<div class="highlight"><pre><code class="java"><span class="kt">long</span> <span class="n">start4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span> <span class="c1">//顺序检索</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search</span><span class="o">;</span>
+</code></pre></div>
+
+<p>表1：</p>
+
+<table><thead>
+<tr>
+<th>#</th>
+<th>代码5</th>
+<th>代码6</th>
+<th>代码7</th>
+<th>代码8</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td>4072ms</td>
+<td>4318ms</td>
+<td>3442ms</td>
+<td>3390ms</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4349ms</td>
+<td>4536ms</td>
+<td>3402ms</td>
+<td>3420ms</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4599ms</td>
+<td>4203ms</td>
+<td>3472ms</td>
+<td>3376ms</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4149ms</td>
+<td>4086ms</td>
+<td>3429ms</td>
+<td>3786ms</td>
+</tr>
+<tr>
+<td>5</td>
+<td>4207ms</td>
+<td>4219ms</td>
+<td>3439ms</td>
+<td>3376ms</td>
+</tr>
+</tbody></table>
+
+<p>代码9，我们试一些离散的数据。</p>
+
+<div class="highlight"><pre><code class="java"><span class="c1">//使用Foo为了避免由原始类型被自动封装（auto-boxing，比如把int类型自动转存Integer对象类型）造成的干扰。</span>
+<span class="kd">class</span> <span class="nc">FOO</span><span class="o">{</span>
+    <span class="n">Integer</span> <span class="n">objKey</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">intKey</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="o">...</span>
+<span class="kt">int</span> <span class="n">MAX</span> <span class="o">=</span> <span class="mi">100000</span><span class="o">;</span>
+
+<span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">hash</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+<span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">sparse</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;();</span>
+
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">));</span>
+<span class="o">}</span>
+
+<span class="n">List</span><span class="o">&lt;</span><span class="n">FOO</span><span class="o">&gt;</span> <span class="n">keylist4search</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">FOO</span><span class="o">&gt;();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">FOO</span> <span class="n">f</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FOO</span><span class="o">();</span>
+    <span class="n">f</span><span class="o">.</span><span class="na">intKey</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+    <span class="n">f</span><span class="o">.</span><span class="na">objKey</span> <span class="o">=</span> <span class="n">Integer</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+    <span class="n">keylist4search</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">f</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kt">long</span> <span class="n">start4search</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">hash</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">keylist4search</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">).</span><span class="na">objKey</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4searchHash</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search</span><span class="o">;</span>
+
+<span class="kt">long</span> <span class="n">start4search2</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">MAX</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">sparse</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">keylist4search</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">).</span><span class="na">intKey</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="kt">long</span> <span class="n">end4searchSparse</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">-</span> <span class="n">start4search2</span><span class="o">;</span>
+</code></pre></div>
+
+<p>代码9,运行5次之后的结果如下：</p>
+
+<p>表2:</p>
+
+<table><thead>
+<tr>
+<th>#</th>
+<th>end4searchHash</th>
+<th>end4searchSparse</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>1</td>
+<td>2402ms</td>
+<td>4577ms</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2249ms</td>
+<td>4188ms</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2649ms</td>
+<td>4821ms</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2404ms</td>
+<td>4598ms</td>
+</tr>
+<tr>
+<td>5</td>
+<td>2413ms</td>
+<td>4547ms</td>
+</tr>
+</tbody></table>
+
+<p>从上面两个表中我们可以看出，当SparseArray中存在需要检索的下标时，SparseArray的性能略胜一筹（表1）。但是当检索的下标比较离散时，SparseArray需要使用多次二分检索，性能显然比hash检索方式要慢一些了（表2），但是按照官方文档的说法性能差异不是很大，不超过50%（ For containers holding up to hundreds of items, the performance difference is not significant, less than 50%.）</p>
+
+<p>总体而言，在Android这种内存比CPU更金贵的系统中，能经济地使用内存还是上策，何况SparseArray在其他方面的表现也不算差（另外，SparseArray删除数据的时候也做了优化——使用了延迟整理数组的方法，可参考官方文档<a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>，读者可以自行把代码9中的<code>hash.get</code>和<code>sparse.get</code>改成<code>hash.remove</code>和<code>sparse.delete</code>试试，你会发现二者的性能相差无几）。而且，使用SparseArray<E>代替HashMap<Integer,E>也是官方推荐的做法，在Eclipse中也会提示你优先使用SparseArray，如图：
+<img src="/images/android-sparsearray-vs-hashmap/eclipse_tips.png" alt=""></p>
+
+<p>另外，我们还可以用 <a href="http://developer.android.com/reference/android/support/v4/util/LongSparseArray.html">LongSparseArray</a>来替代HashMap<Long,E>。<a href="http://developer.android.com/reference/android/util/SparseBooleanArray.html">SparseBooleanArray</a>来替代HashMap<Integer,Boolean>。</p>
+
+	 	</div>
+		<div class="ds-thread"></div>
+	 </div>
+	 <div class="col-md-4">
+	 	<div id="sideblock_toc" style="display: none;"></div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			最新文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/android/2014/02/10/android-sparsearray-vs-hashmap.html">SparseArray替代HashMap来提高性能</a></li>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 	<div class="sideblock">
+	 		<h3>
+	 			相关文章
+	 		</h3>
+	 		<ul>
+	 			
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
+	 			
+	 				<li><a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a></li>
+	 			
+	 				<li><a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a></li>
+	 			
+	 				<li><a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a></li>
+	 			
+	 		</ul>
+	 	</div>
+	 </div>
+</div>
+<script type="text/javascript">$('#main_content').toc({
+	containerDomId : 'sideblock_toc'
+});</script>
+
+
+<!-- Duoshuo Comment BEGIN -->
+	
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"androidperformance"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = 'http://static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		|| document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- Duoshuo Comment END -->
+		</div>
+		
+		<div id="footer">
+				© 2013–2014			
+		</div>
+	</div>
+	<div style="display: none;" >
+	<script type="text/javascript">
+	var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+	document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3Fe4e170c12e7c50f61b4e5b193cbd5ec8' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	</div>
+</body>
+</html>

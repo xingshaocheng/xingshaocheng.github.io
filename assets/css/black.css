@@ -197,10 +197,17 @@ html{
 
 .post blockquote p{
 	font-size: 12px;
+	text-indent: 0;
 }
 
 .post li{
 	margin-left:4em;
+	margin-bottom: 1em;
+	padding-left: 0;
+}
+
+.post li p{
+	text-indent: 0;
 }
 
 
@@ -214,3 +221,16 @@ html{
 	margin-left: 10px;
 }
 
+table {  
+    border: 1px solid #B1CDE3;  
+    padding:0;   
+    border-collapse: collapse;  
+	margin-left: 2em;
+}  
+  
+td,th {  
+    border: 1px solid #CCC;  
+    background: #fff;  
+    font-size:12px;  
+    padding: 3px 3px 3px 8px;  
+}  

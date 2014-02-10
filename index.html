@@ -56,6 +56,22 @@
 					
 					   		     	
 			     
+			     	<p class="date">二月<b>10</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/02/10/android-sparsearray-vs-hashmap.html">SparseArray替代HashMap来提高性能</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+			     	<p><p><a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>是Android框架独有的类，在标准的JDK中不存在这个类。它要比 HashMap 节省内存，某些情况下比HashMap性能更好，按照官方问答的解释，主要是因为SparseArray不需要对key和value进行auto-boxing（将原始类型封装为对象类型，比如把int类型封装成Integer类型），结构比HashMap简单（SparseArray内部主要使用两个一维数组来保存数据，一个用来存key，一个用来存value）不需要额外的额外的数据结构（主要是针对HashMap中的HashMapEntry而言的）。是骡子是马得拉出来遛遛，下面我们就通过几段程序来证明SparseArray在各方面表现如何，下面的试验结果时在我的Hike X1（Android 4.2.2）手机上运行得出的。</p>
+</p>	
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
 			     	<p class="date">一月<b>29</b></p>
 			     
 			     	<div class="title">
@@ -124,6 +140,25 @@
 			<ul>
         	
         	
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        			<li>
+        				<a href="/archive.html#2014-02">
+        				
+						
+						        				
+						2014 年二月
+        				</a> (1)
+        			</li>
+					
+				
+        		
 			
 				
     			
