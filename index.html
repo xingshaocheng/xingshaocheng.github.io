@@ -56,14 +56,103 @@
 					
 					   		     	
 			     
+			     	<p class="date">二月<b>17</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/02/17/android-manage-memory.html">Android中的内存管理</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>本文内容翻译自：http://developer.android.com/training/articles/memory.html</p>
+
+<p>随机存取存储器(RAM)再任何软件开发环境中都是宝贵的资源，但是在移动操作系统中，内存资源更为宝贵，使用时也会收到限制。虽然Android的Dalvik虚拟机有运行时的垃圾回收机制，但是这不意味着你的App可以随便使用内存。</p>
+
+<p>为了让垃圾回收器回收内存，你得避免造成内存泄漏（通常是持有全局对象的引用造成的），并且在适当的时候释放<code>Reference</code>类型的对象（下文中会进一步讨论这个问题）。对于大多数App，Dalvik虚拟机的垃圾回收器会处理好剩下的内存回收：当对象离开当前活动线程的作用域时，系统会回收其内存空间。</p>
+
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">二月<b>17</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/02/17/android-manage-memory.html">Android中的内存管理</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>本文内容翻译自：http://developer.android.com/training/articles/memory.html</p>
+
+<p>随机存取存储器(RAM)再任何软件开发环境中都是宝贵的资源，但是在移动操作系统中，内存资源更为宝贵，使用时也会收到限制。虽然Android的Dalvik虚拟机有运行时的垃圾回收机制，但是这不意味着你的App可以随便使用内存。</p>
+
+<p>为了让垃圾回收器回收内存，你得避免造成内存泄漏（通常是持有全局对象的引用造成的），并且在适当的时候释放<code>Reference</code>类型的对象（下文中会进一步讨论这个问题）。对于大多数App，Dalvik虚拟机的垃圾回收器会处理好剩下的内存回收：当对象离开当前活动线程的作用域时，系统会回收其内存空间。</p>
+
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
 			     	<p class="date">二月<b>10</b></p>
 			     
 			     	<div class="title">
 			     		<a href="/android/2014/02/10/android-sparsearray-vs-hashmap.html">SparseArray替代HashMap来提高性能</a>
 			     		<span style="font-size: 14px;font-weight: normal;"></span>
 			     	</div>
-			     	<p><p><a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>是Android框架独有的类，在标准的JDK中不存在这个类。它要比 HashMap 节省内存，某些情况下比HashMap性能更好，按照官方问答的解释，主要是因为SparseArray不需要对key和value进行auto-boxing（将原始类型封装为对象类型，比如把int类型封装成Integer类型），结构比HashMap简单（SparseArray内部主要使用两个一维数组来保存数据，一个用来存key，一个用来存value）不需要额外的额外的数据结构（主要是针对HashMap中的HashMapEntry而言的）。是骡子是马得拉出来遛遛，下面我们就通过几段程序来证明SparseArray在各方面表现如何，下面的试验结果时在我的Hike X1（Android 4.2.2）手机上运行得出的。</p>
-</p>	
+					
+						<p><p><a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>是Android框架独有的类，在标准的JDK中不存在这个类。它要比 HashMap 节省内存，某些情况下比HashMap性能更好，按照官方问答的解释，主要是因为SparseArray不需要对key和value进行auto-boxing（将原始类型封装为对象类型，比如把int类型封装成Integer类型），结构比HashMap简单（SparseArray内部主要使用两个一维数组来保存数据，一个用来存key，一个用来存value）不需要额外的额外的数据结构（主要是针对HashMap中的HashMapEntry而言的）。是骡子是马得拉出来遛遛，下面我们就通过几段程序来证明SparseArray在各方面表现如何，下面的试验结果时在我的Hike X1（Android 4.2.2）手机上运行得出的。</p>
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">二月<b>10</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/02/10/android-sparsearray-vs-hashmap.html">SparseArray替代HashMap来提高性能</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p><a href="http://developer.android.com/reference/android/util/SparseArray.html">SparseArray</a>是Android框架独有的类，在标准的JDK中不存在这个类。它要比 HashMap 节省内存，某些情况下比HashMap性能更好，按照官方问答的解释，主要是因为SparseArray不需要对key和value进行auto-boxing（将原始类型封装为对象类型，比如把int类型封装成Integer类型），结构比HashMap简单（SparseArray内部主要使用两个一维数组来保存数据，一个用来存key，一个用来存value）不需要额外的额外的数据结构（主要是针对HashMap中的HashMapEntry而言的）。是骡子是马得拉出来遛遛，下面我们就通过几段程序来证明SparseArray在各方面表现如何，下面的试验结果时在我的Hike X1（Android 4.2.2）手机上运行得出的。</p>
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">二月<b>09</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/2014/02/09/alignRules.html">File Names Alignment Rules</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>Normally the <acronym title="Hierarchical File System">HFS+</acronym> disks are formatted ignoring the file name case, so if we have winter.jpg and WINTER.JPG they cannot be created on same directory ffff.</p>
+</p>
+					
+			     		
 			     </li>
 			   
 			     <li class="each_list_item">
@@ -78,8 +167,11 @@
 			     		<a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a>
 			     		<span style="font-size: 14px;font-weight: normal;"></span>
 			     	</div>
-			     	<p><p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
-</p>	
+					
+						<p><p>以前做Web开发时，在上线前我们会把png和jpg图片再压缩一遍，已保证文件最小。Android中会使用大量的png图片来绘制UI组件，由此我们也自然联想到是否可以通过同样的手段来优化Android中的PNG图片，进而减小apk文件的大小。但是经过实验证明，这种做法是徒劳的，因为在打包的过程中Android自带的aapt工具已经自动帮你做了这件事，而且目前我还没有发现如何可以改变这种方式（比如禁用自动优化，或者改变压缩比）。</p>
+</p>
+					
+			     		
 			     </li>
 			   
 			     <li class="each_list_item">
@@ -94,8 +186,49 @@
 			     		<a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士</a>
 			     		<span style="font-size: 14px;font-weight: normal;"></span>
 			     	</div>
-			     	<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
-</p>	
+					
+						<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>26</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/01/26/android-perf-tips.html">Android 性能小贴士[draft]</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>本文主要关心一些性能优化小技巧——“微优化”，这些技巧并不一定给你的应用带来令人激动人心的性能提升，但是把这些技巧结合起来使用，也会给你的应用带来一些性能上的提高。在性能优化方面，选择正确的算法和数据结构永远是你的第一选择，但是这不是本文所要介绍的重点。你应该把本文所提到技巧运用到日常的开发中，并努力使其成为你的编码习惯的一部分。</p>
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>26</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/android/2014/01/26/android-perf-reader.html">搞Android性能优化必读的一些文章和书籍</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>《 Effective Java》</p>
+</p>
+					
+			     		
 			     </li>
 			   
 			     <li class="each_list_item">
@@ -110,8 +243,30 @@
 			     		<a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快</a>
 			     		<span style="font-size: 14px;font-weight: normal;"></span>
 			     	</div>
-			     	<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
-</p>	
+					
+						<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
+</p>
+					
+			     		
+			     </li>
+			   
+			     <li class="each_list_item">
+			     
+       				
+					
+					   		     	
+			     
+			     	<p class="date">一月<b>17</b></p>
+			     
+			     	<div class="title">
+			     		<a href="/java/2014/01/17/static-private-public-which-faster.html">Java中static、private、public 方法哪个更快[draft]</a>
+			     		<span style="font-size: 14px;font-weight: normal;"></span>
+			     	</div>
+					
+						<p><p>在java中，同样的方法被声明不通的类型在访问速度上会有不同吗？如果不通会有多大差异？让我们功过实验来证明这一切。</p>
+</p>
+					
+			     		
 			     </li>
 			   
 			     <li class="each_list_item">
@@ -126,9 +281,12 @@
 			     		<a href="/java/2014/01/11/javap-verbose.html">读懂 javap -verbose</a>
 			     		<span style="font-size: 14px;font-weight: normal;"></span>
 			     	</div>
-			     	<p><p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
+					
+						<p><p>javap是jdk自带的一个工具，可以反编译class文件，是我们在做java代码性能分析时必不可少的一个工具。
 我们先写个简单的代码，然后我们在逐个分析 javap 解析出来的内容。</p>
-</p>	
+</p>
+					
+			     		
 			     </li>
 			   
 			 </ul>
@@ -148,16 +306,86 @@
 				 
 				     		
         		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
         			<li>
         				<a href="/archive.html#2014-02">
         				
 						
 						        				
 						2014 年二月
-        				</a> (1)
+        				</a> (5)
         			</li>
 					
 				
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
+        		
+			
+				
+    			
+    			
+        		
+				 
+				     		
+        		
+        		
         		
 			
 				
@@ -203,7 +431,7 @@
 						
 						        				
 						2014 年一月
-        				</a> (4)
+        				</a> (7)
         			</li>
 					
 				

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>搞Android性能优化必读的一些文章和书籍 - 专注安卓性能优化以及最佳实践的</title>
+	<title>File Names Alignment Rules - 专注安卓性能优化以及最佳实践的</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	
 	<link rel="shortcut icon" href="/images/favicon.ico" />
@@ -46,10 +46,24 @@
 		<div class="clearfix">
 			<div class="raw">
 	 <div class="col-md-8 post">
-		<h2>搞Android性能优化必读的一些文章和书籍 </h2>
-		<div class="meta">发表于 2014-01-26 09:24:01</div>
+		<h2>File Names Alignment Rules </h2>
+		<div class="meta">发表于 2014-02-09 10:49:01</div>
 	 	<div id="main_content">
-		 <p>《 Effective Java》</p>
+		 <p>Normally the <acronym title="Hierarchical File System">HFS+</acronym> disks are formatted ignoring the file name case, so if we have winter.jpg and WINTER.JPG they cannot be created on same directory ffff.</p>
+
+<hr>
+
+<p>When the HFS+ partitions are formatted with case sensitive support the file names winter.jpg and WINTER.JPG are two different file names and can be created on same directory.</p>
+
+<p>It is possible to let VisualDiffer determine the file name alignment case algorithm looking at HFS partition case, so three scenarios are possible</p>
+
+<p>If the last scenario is true, the alignment will try to be smart, first it searches if a match case is available (winter.jpg with winter.jpg) then it tries to align with the most similar name.</p>
+
+<h1>Align by User Defined Rules</h1>
+
+<p>There are scenarios where it is necessary to align files having different names.</p>
+
+<p>The most simple scenario has files with same name but different extension as shown below</p>
 
 	 	</div>
 		<div class="ds-thread"></div>
@@ -88,7 +102,7 @@
 	 			
 	 				<li><a href="/android/2014/02/10/android-sparsearray-vs-hashmap.html">SparseArray替代HashMap来提高性能</a></li>
 	 			
-	 				<li><a href="/2014/02/09/alignRules.html">File Names Alignment Rules</a></li>
+	 				<li><a href="/android/2014/01/29/android-sth-about-png-optimization.html">Android中关于PNG优化的那点事</a></li>
 	 			
 	 		</ul>
 	 	</div>
