@@ -2,6 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     
     <url>
+      <loc>/android/2014/03/12/android-anr.html</loc>
+        <lastmod>2014-03-12T08:44:45Z</lastmod>
+        <changefreq>monthly</changefreq>
+    </url>
+    
+    <url>
       <loc>/android/2014/02/17/android-manage-memory.html</loc>
         <lastmod>2014-02-17T10:49:01Z</lastmod>
         <changefreq>monthly</changefreq>
